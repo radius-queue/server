@@ -1,5 +1,5 @@
 import {Customer, customerConverter} from './customer';
-import {firestore} from '../firebase';
+import {firestore} from '../firestore';
 
 /**
  * upload Customer object to firebase server.

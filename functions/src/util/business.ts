@@ -1,4 +1,4 @@
-import {admin} from '../firebase';
+import {firestore} from '../firestore';
 /**
  * This class represents a Business
  */ 
@@ -110,7 +110,7 @@ export class BusinessLocation {
       address: location.address,
       phoneNumber: location.phoneNumber,
       hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
-      coordinates: new admin.firestore.GeoPoint(
+      coordinates: new firestore.GeoPoint(
           location.coordinates[0],
           location.coordinates[1],
       ),

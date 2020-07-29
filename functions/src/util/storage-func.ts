@@ -1,7 +1,5 @@
-import {admin} from '../firebase';
-
-const auth = admin.auth();
-const storage = admin.storage();
+import {auth, storage} from '../firestore';
+import { FirebaseError } from 'firebase-admin';
 
 /**
  * Uploads image to firebase
@@ -13,37 +11,37 @@ const storage = admin.storage();
  *  string if failed
  */
 export function postPic(file: File, isBusiness: boolean,
-    metadata: any = undefined, callback: (URL : string) => void) {
+    metadataParam: any = undefined, callback: (URL : string) => void) {
   const storageRef = storage.ref();
-  metadata = (metadata) ? metadata : {contentType: 'image/jpeg'};
+  const metadata = (metadataParam) ? metadataParam : {contentType: 'image/jpeg'};
   let path = (isBusiness) ? 'businessImages/' : 'customerImages';
-  path = path + auth.currentUser!.uid + '/';
+  path = path + auth.currentUser.uid + '/';
 
   // Upload file and metadata to the object 'images/mountains.jpg'
   const uploadTask = storageRef.child(path + file.name).put(file, metadata);
 
   // Listen for state changes, errors, and completion of the upload.
-  uploadTask.on(admin.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-      function(snapshot) {
+  uploadTask.on(storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+      function(snapshot: any) {
       // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         console.log('Upload is ' + progress + '% done');
         switch (snapshot.state) {
-          case admin.storage.TaskState.PAUSED: // or 'paused'
+          case storage.TaskState.PAUSED: // or 'paused'
             console.log('Upload is paused');
             break;
-          case admin.storage.TaskState.RUNNING: // or 'running'
+          case storage.TaskState.RUNNING: // or 'running'
             console.log('Upload is running');
             break;
         }
-      }, function(error: any) {
+      }, function(error: FirebaseError) {
         console.log(error.code);
         callback('');
         // A full list of error codes is available at
         // https://firebase.google.com/docs/storage/web/handle-errors
       }, function() {
         // Upload completed successfully, now we can get the download URL
-        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL: string) {
           console.log('File available at', downloadURL);
           callback(downloadURL);
         });
@@ -63,7 +61,7 @@ export function getPic(path: string, callback: (URL : string) => void) {
   // Get the download URL
   starsRef.getDownloadURL().then(function(url:string) {
     callback(url);
-  }).catch(function(error) {
+  }).catch(function(error: FirebaseError) {
     console.log(error.code);
     // A full list of error codes is available at
     // https://firebase.google.com/docs/storage/web/handle-errors

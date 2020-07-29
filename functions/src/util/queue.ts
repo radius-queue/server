@@ -1,4 +1,4 @@
-import {firestore} from '../firebase';
+import {firestore} from '../firestore';
 /**
  * This class represents a queue
  */
@@ -72,10 +72,10 @@ export class Party {
   static messageFromFB(messages: any[]): [Date, string][] {
     const ret : [Date, string][] = [];
     if (messages) {
-      for (let i =0; i < messages.length; i++) {
+      for (const message of messages) {
         const entry : [Date, string] =[new Date(), ''];
-        entry[0] = messages[i].date.toDate();
-        entry[1] = messages[i].message;
+        entry[0] = message.date.toDate();
+        entry[1] = message.message;
         ret.push(entry);
       }
     }
@@ -90,10 +90,10 @@ export class Party {
   static messageToFB(messages: [Date, string][]) : any[] {
     const ret : any[] = [];
     if (messages) {
-      for (let i = 0; i <messages.length; i++) {
+      for (const message of messages) {
         const entry = {
-          date: messages[i][0],
-          message: messages[i][1],
+          date: message[0],
+          message: message[1],
         };
         ret.push(entry);
       }
@@ -127,7 +127,7 @@ export class Party {
       size: party.size,
       phoneNumber: party.phoneNumber,
       quote: party.quote,
-      checkIn: firestore.Timestamp.fromDate(party.checkIn!),
+      checkIn: firestore.Timestamp.fromDate(party.checkIn),
       lastName: party.lastName,
       messages: this.messageToFB(party.messages),
     };
@@ -141,7 +141,7 @@ export const queueConverter = {
     return {
       name: q.name,
       parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firestore.Timestamp.fromDate(q.end!),
+      end: firestore.Timestamp.fromDate(q.end),
       open: q.open,
     };
   },
@@ -178,12 +178,12 @@ export const queueInfoConverter = {
     return {
       name: q.name,
       parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firestore.Timestamp.fromDate(q.end!),
+      end: firestore.Timestamp.fromDate(q.end),
       open: q.open,
     };
   },
   fromFirestore: function(snapshot: any, options: any) {
-    const data = snapshot.data(options);
+    const data = snapshot.data();
     return new QueueInfo(
         data.parties.length,
         diff_minutes(data.parties[0].checkIn.toDate(), new Date()),
@@ -193,7 +193,7 @@ export const queueInfoConverter = {
 };
 
 function diff_minutes(dt2: Date, dt1: Date) {
-  var diff =(dt2.getTime() - dt1.getTime()) / 1000;
+  let diff =(dt2.getTime() - dt1.getTime()) / 1000;
   diff /= 60;
   return Math.abs(Math.round(diff));
 }

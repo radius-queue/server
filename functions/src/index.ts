@@ -1,7 +1,10 @@
+const admin = require('firebase-admin');
+
+admin.initializeApp();
+
 import * as functions from 'firebase-functions';
-import {admin} from './firebase';
-
-
+import {getQueueInfo} from './util/get-queue';
+import {QueueInfo} from './util/queue';
 
 
 
@@ -13,3 +16,15 @@ import {admin} from './firebase';
 //   response.send("Hello from Firebase!");
 // });
 
+exports.getQueueInfo = functions.https.onRequest(async (req, res) => {
+  const businessID = req.query.business;
+
+  res.send(businessID);
+  const queueInfo : QueueInfo | undefined = await getQueueInfo(businessID as string);
+
+  if (queueInfo) {
+    res.json({...queueInfo});
+  } else {
+    res.status(404).send('This Queue Does Not Exist');
+  }
+})

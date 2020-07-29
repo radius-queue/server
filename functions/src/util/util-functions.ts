@@ -4,16 +4,17 @@
  * @return {string} parsed phone number
  */
 export function parsePhoneNum(phoneNum : string) : string {
+  let number = phoneNum;
   if (phoneNum.length < 3) {
     return phoneNum;
   } else {
-    phoneNum = '(' + phoneNum.substring(0, 3) + ')' + phoneNum.substring(3);
+    number = '(' + phoneNum.substring(0, 3) + ')' + number.substring(3);
   }
 
-  if (phoneNum.length > 8) {
-    phoneNum = phoneNum.substring(0, 8) + '-' + phoneNum.substring(8);
+  if (number.length > 8) {
+    number = number.substring(0, 8) + '-' + number.substring(8);
   }
-  return phoneNum;
+  return number;
 }
 
 /**

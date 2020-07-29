@@ -1,5 +1,6 @@
-import {firestore} from '../firebase';
+import {firestore} from '../firestore';
 import {queueConverter, Queue} from './queue';
+import { FirebaseError } from 'firebase-admin';
 
 /**
  * Realtime listener for queues
@@ -15,15 +16,15 @@ export class QueueListener {
   constructor(uid: string, kickback: (q: any) => void) {
     this.listener = firestore.collection('queues').doc(uid)
         .withConverter(queueConverter)
-        .onSnapshot(function(doc) {
+        .onSnapshot(function(doc: FirebaseFirestore.DocumentData) {
           if (doc.exists) {
-            const queue: Queue = doc.data()!;
+            const queue: Queue = doc.data();
             queue.uid = uid;
             kickback(queue);
           } else {
             console.log('No such document!');
           }
-        }, function(error) {
+        }, function(error: FirebaseError) {
           console.log('Error getting document:', error);
         });
   }

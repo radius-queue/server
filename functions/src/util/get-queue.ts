@@ -1,5 +1,6 @@
 import {Queue, queueConverter, QueueInfo, queueInfoConverter} from './queue';
-import {firestore} from '../firebase';
+import {firestore} from '../firestore';
+import { FirebaseError } from 'firebase-admin';
 
 /**
  * Get Queue from database based on uid
@@ -9,7 +10,7 @@ export default async function getQueue(uid : string) {
   let ret: Queue | undefined;
   await firestore.collection('queues').doc(uid)
       .withConverter(queueConverter)
-      .get().then(function(doc) {
+      .get().then(function(doc: FirebaseFirestore.DocumentData) {
         if (doc.exists) {
           const q: Queue | undefined = doc.data();
           // Use a City instance method
@@ -17,7 +18,7 @@ export default async function getQueue(uid : string) {
         } else {
           console.log('No such document!');
         }
-      }).catch(function(error) {
+      }).catch(function(error: FirebaseError) {
         console.log('Error getting document:', error);
       });
 
@@ -32,7 +33,7 @@ export async function getQueueInfo(uid : string) {
   let ret: QueueInfo | undefined;
   await firestore.collection('queues').doc(uid)
       .withConverter(queueInfoConverter)
-      .get().then(function(doc) {
+      .get().then(function(doc: FirebaseFirestore.DocumentData) {
         if (doc.exists) {
           const q: QueueInfo | undefined = doc.data();
           // Use a City instance method
@@ -40,10 +41,10 @@ export async function getQueueInfo(uid : string) {
         } else {
           console.log('No such document!');
         }
-      }).catch(function(error) {
+      }).catch(function(error: FirebaseError) {
         console.log('Error getting document:', error);
       });
-
+      
   return ret;
 }
 
