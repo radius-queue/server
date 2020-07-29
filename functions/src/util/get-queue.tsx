@@ -1,4 +1,4 @@
-import {Queue, queueConverter} from './queue';
+import {Queue, queueConverter, QueueInfo, queueInfoConverter} from './queue';
 import {firestore} from '../firebase';
 
 /**
@@ -28,4 +28,22 @@ export default async function getQueue(uid : string) {
   return ret;
 }
 
+export async function getQueueInfo(uid : string) {
+  let ret: QueueInfo | undefined;
+  await firestore.collection('queues').doc(uid)
+      .withConverter(queueInfoConverter)
+      .get().then(function(doc) {
+        if (doc.exists) {
+          const q: QueueInfo | undefined = doc.data();
+          // Use a City instance method
+          ret = q;
+        } else {
+          console.log('No such document!');
+        }
+      }).catch(function(error) {
+        console.log('Error getting document:', error);
+      });
+
+  return ret;
+}
 
