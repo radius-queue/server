@@ -158,3 +158,42 @@ export const queueConverter = {
 };
 
 
+/**
+ * This class represents a queue
+ */
+export class QueueInfo {
+  length: number;
+  longestWaitTime: number;
+  open: boolean;
+
+  constructor(length: number, longestWaitTime: number, open: boolean) {
+    this.length = length;
+    this.longestWaitTime = longestWaitTime;
+    this.open = open;
+  }
+}
+
+export const queueInfoConverter = {
+  toFirestore: function(q: Queue) {
+    return {
+      name: q.name,
+      parties: q.parties.map((e) => Party.toFirebase(e)),
+      end: firebase.firestore.Timestamp.fromDate(q.end!),
+      open: q.open,
+    };
+  },
+  fromFirestore: function(snapshot: any, options: any) {
+    const data = snapshot.data(options);
+    return new QueueInfo(
+        data.parties.length,
+        diff_minutes(data.parties[0].checkIn.toDate(), new Date()),
+        data.open,
+    );
+  },
+};
+
+function diff_minutes(dt2: Date, dt1: Date) {
+  var diff =(dt2.getTime() - dt1.getTime()) / 1000;
+  diff /= 60;
+  return Math.abs(Math.round(diff));
+}
