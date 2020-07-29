@@ -1,7 +1,7 @@
-import firebase from 'firebase/app';
+import {admin} from '../firebase';
 /**
  * This class represents a Business
- */
+ */ 
 export class Business {
   name: string;
   firstName: string;
@@ -46,6 +46,7 @@ export class BusinessLocation {
   coordinates: number[]; // in decimal degrees (DD).
   queues: string[];
   geoFenceRadius: number; // in meters
+  images: string[]
 
   /**
    * @param {string} name Name of specific location
@@ -60,10 +61,11 @@ export class BusinessLocation {
    * @param {number} geoFenceRadius Optional radius around business location
    *    (in meters) that a customer is allowed to enter queue, Default value
    *    of -1
+   * @param {string[]} images array of string urls that correspond to uploaded images from the business 
    */
   constructor(name: string, address: string, phoneNumber: string, hours: [Date | null, Date | null][],
       coordinates: number[], queues: string[] = [],
-      geoFenceRadius: number = -1) {
+      geoFenceRadius: number = -1, images: string[] = []) {
     this.name = name;
     this.address = address;
     this.phoneNumber = phoneNumber;
@@ -71,6 +73,7 @@ export class BusinessLocation {
     this.coordinates = coordinates;
     this.queues = queues;
     this.geoFenceRadius = geoFenceRadius;
+    this.images = images;
   }
 
   /* Firebase helper methods */
@@ -82,7 +85,7 @@ export class BusinessLocation {
   */
   static fromFirebase(location: any): BusinessLocation {
     const locPrams : [string, string, string, [Date | null, Date | null][], number[],
-     string[], number] = [
+     string[], number, string[]] = [
        location.name,
        location.address,
        location.phoneNumber,
@@ -91,6 +94,7 @@ export class BusinessLocation {
          location.coordinates.longitude],
        location.queues,
        location.geoFenceRadius,
+       [],
      ];
     return new BusinessLocation(...locPrams);
   }
@@ -106,7 +110,7 @@ export class BusinessLocation {
       address: location.address,
       phoneNumber: location.phoneNumber,
       hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
-      coordinates: new firebase.firestore.GeoPoint(
+      coordinates: new admin.firestore.GeoPoint(
           location.coordinates[0],
           location.coordinates[1],
       ),
