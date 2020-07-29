@@ -1,4 +1,4 @@
-import firebase from 'firebase/app';
+import {firestore} from '../firebase';
 /**
  * This class represents a queue
  */
@@ -127,7 +127,7 @@ export class Party {
       size: party.size,
       phoneNumber: party.phoneNumber,
       quote: party.quote,
-      checkIn: firebase.firestore.Timestamp.fromDate(party.checkIn!),
+      checkIn: firestore.Timestamp.fromDate(party.checkIn!),
       lastName: party.lastName,
       messages: this.messageToFB(party.messages),
     };
@@ -141,7 +141,7 @@ export const queueConverter = {
     return {
       name: q.name,
       parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firebase.firestore.Timestamp.fromDate(q.end!),
+      end: firestore.Timestamp.fromDate(q.end!),
       open: q.open,
     };
   },
@@ -178,7 +178,7 @@ export const queueInfoConverter = {
     return {
       name: q.name,
       parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firebase.firestore.Timestamp.fromDate(q.end!),
+      end: firestore.Timestamp.fromDate(q.end!),
       open: q.open,
     };
   },
