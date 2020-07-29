@@ -161,16 +161,10 @@ export const queueConverter = {
 /**
  * This class represents a queue
  */
-export class QueueInfo {
+export interface QueueInfo {
   length: number;
   longestWaitTime: number;
   open: boolean;
-
-  constructor(length: number, longestWaitTime: number, open: boolean) {
-    this.length = length;
-    this.longestWaitTime = longestWaitTime;
-    this.open = open;
-  }
 }
 
 export const queueInfoConverter = {
@@ -183,16 +177,12 @@ export const queueInfoConverter = {
     };
   },
   fromFirestore: function(snapshot: any, options: any) {
-    const data = snapshot.data();
-    return new QueueInfo(
-        data.parties.length,
-        diff_minutes(data.parties[0].checkIn.toDate(), new Date()),
-        data.open,
-    );
+    // const data = snapshot.data(options);
+    return ;
   },
 };
 
-function diff_minutes(dt2: Date, dt1: Date) {
+export function diff_minutes(dt2: Date, dt1: Date) {
   let diff =(dt2.getTime() - dt1.getTime()) / 1000;
   diff /= 60;
   return Math.abs(Math.round(diff));

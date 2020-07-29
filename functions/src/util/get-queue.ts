@@ -1,4 +1,4 @@
-import {Queue, queueConverter, QueueInfo, queueInfoConverter} from './queue';
+import {Queue, queueConverter, QueueInfo, diff_minutes} from './queue';
 import {firestore} from '../firestore';
 import { FirebaseError } from 'firebase-admin';
 
@@ -30,21 +30,25 @@ export default async function getQueue(uid : string) {
 }
 
 export async function getQueueInfo(uid : string) {
-  let ret: QueueInfo | undefined;
+  let ret : QueueInfo = {
+    length: 0,
+    longestWaitTime : 0,
+    open: true,
+  };
   await firestore.collection('queues').doc(uid)
-      .withConverter(queueInfoConverter)
       .get().then(function(doc: FirebaseFirestore.DocumentData) {
         if (doc.exists) {
-          const q: QueueInfo | undefined = doc.data();
+          ret.length = doc.data().parties.length;
+          ret.longestWaitTime = diff_minutes(doc.data().parties[0].checkIn.toDate(), new Date())
+          ret.open = doc.data().open;
+
           // Use a City instance method
-          ret = q;
         } else {
           console.log('No such document!');
         }
       }).catch(function(error: FirebaseError) {
         console.log('Error getting document:', error);
       });
-      
   return ret;
 }
 
