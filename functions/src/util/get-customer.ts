@@ -1,4 +1,4 @@
-import {Customer, customerConverter} from './customer';
+import {Customer} from './customer';
 import {firestore} from '../firestore';
 import { FirebaseError } from 'firebase-admin';
 
@@ -9,11 +9,19 @@ import { FirebaseError } from 'firebase-admin';
 export default async function getCustomer(uid : string) {
   let ret: Customer | undefined;
   await firestore.collection('customer').doc(uid)
-      .withConverter(customerConverter)
       .get().then(function(doc: FirebaseFirestore.DocumentData) {
         if (doc.exists) {
-          const q: Customer | undefined = doc.data();
-          ret = q;
+          const data = doc.data();
+          ret = {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            uid: '',
+            currentQueue: data.currentQueue,
+            favorites: data.favorites,
+            recents: data.recents,
+          };
         } else {
           console.log('No such document!');
         }

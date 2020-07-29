@@ -1,6 +1,6 @@
 
 import {firestore} from '../firestore';
-import {Business, businessConverter} from './business';
+import {Business, BusinessLocation} from './business';
 import { FirebaseError } from 'firebase-admin';
 
 /**
@@ -10,11 +10,18 @@ import { FirebaseError } from 'firebase-admin';
 export default async function getBusiness(uid : string) {
   let ret: Business | undefined;
   await firestore.collection('businesses').doc(uid)
-      .withConverter(businessConverter)
       .get().then(function(doc: FirebaseFirestore.DocumentData) {
         if (doc.exists) {
-          const q: Business | undefined = doc.data();
-          ret = q;
+          const data = doc.data();
+          ret = {
+            name: data.name,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            uid: '',
+            type: data.type,
+            locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(e))
+          }
         } else {
           console.log('No such document!');
         }

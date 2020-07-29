@@ -1,4 +1,4 @@
-import {Customer, customerConverter} from './customer';
+import {Customer} from './customer';
 import {firestore} from '../firestore';
 
 /**
@@ -7,7 +7,14 @@ import {firestore} from '../firestore';
  * @param {Customer} c customer object to be pushed to database
  */
 export default function postCustomer(c : Customer) {
-  firestore.collection('customer').doc(c.uid)
-      .withConverter(customerConverter)
-      .set(c);
+  const data: any = {
+    firstName: c.firstName,
+    lastName: c.lastName,
+    email: c.email,
+    phoneNumber: c.phoneNumber,
+    currentQueue: c.currentQueue,
+    favorites: c.favorites,
+    recents: c.recents,
+  };
+  firestore.collection('customer').doc(c.uid).set(data);
 }

@@ -1,5 +1,5 @@
 import {firestore} from '../firestore';
-import {queueConverter, Queue} from './queue';
+import {Queue, Party} from './queue';
 
 /**
  * upload Queue object to firebase server.
@@ -7,7 +7,11 @@ import {queueConverter, Queue} from './queue';
  * @param {Queue} q Queue object to be updated on the database
  */
 export default function postQueue(q : Queue) {
-  firestore.collection('queues').doc(q.uid)
-      .withConverter(queueConverter)
-      .set(q);
+  const data : any = {
+    name: q.name,
+    parties: q.parties.map((e) => Party.toFirebase(e)),
+    end: firestore.Timestamp.fromDate(q.end),
+    open: q.open,
+  };
+  firestore.collection('queues').doc(q.uid).set(data);
 }
