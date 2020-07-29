@@ -5,30 +5,27 @@ admin.initializeApp();
 import * as functions from 'firebase-functions';
 import {getQueueInfo} from './util/get-queue';
 
+// Callable functions:
+// Website functions
+
+// Full business
+// - push
+// - pull
+// Full Queue -- parties (one time call, pull)
 
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// App functions
 
-// exports.getQueueInfo = functions.https.onRequest(async (req, res) => {
-//   const businessID = req.query.business;
-
-//   res.send(businessID);
-//   const queueInfo : QueueInfo | undefined = await getQueueInfo(businessID as string);
-
-//   if (queueInfo) {
-//     res.json({...queueInfo});
-//   } else {
-//     res.status(404).send('This Queue Does Not Exist');
-//   }
-// })
-
+// Business location - pull
+// Customer profile
+// - push
+// - pull
+// Queue mini
 exports.getQueueInfo = functions.https.onCall((data, context) => {
   const uid = data.uid;
   return getQueueInfo(uid);
 })
+
+// Listeners functions:
+
+// Customer profile init - empty recents etc
