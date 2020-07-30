@@ -9,6 +9,8 @@ import postCustomer from './util/post-customer';
 import getBusiness, { getBusinessLocation } from './util/get-business';
 import postBusiness from './util/post-business';
 import postQueue from './util/post-queue';
+import { Queue, Party } from './util/queue';
+
 
 // Callable functions:
 // Website functions
@@ -18,7 +20,7 @@ import postQueue from './util/post-queue';
 // - pull
 // Full Queue -- parties (one time call, pull)
 
-exports.getBusiness = functions.https.onCall((data, context) => {
+exports.getBusiness = functions.https.onCall(async (data, context) => {
   if (!data.uid) {
     throw new functions.https.HttpsError(
       'invalid-argument',
@@ -33,7 +35,7 @@ exports.getBusiness = functions.https.onCall((data, context) => {
     );
   }
 
-  return getBusiness(data.uid);
+  return await getBusiness(data.uid);
 });
 
 exports.postBusiness = functions.https.onCall((data, context) => {
@@ -50,11 +52,10 @@ exports.postBusiness = functions.https.onCall((data, context) => {
       'only authenticated users can post their information'
     );
   }
-
-  return postBusiness(data.business);
+  postBusiness(data.business);
 });
 
-exports.getQueue = functions.https.onCall((data, context) => {
+exports.getQueue = functions.https.onCall(async (data, context) => {
   if (data.queueID) {
     throw new functions.https.HttpsError(
       'invalid-argument',
@@ -62,7 +63,7 @@ exports.getQueue = functions.https.onCall((data, context) => {
     );
   }
 
-  return getQueue(data.uid);
+  return await getQueue(data.uid);
 });
 
 exports.postQueue = functions.https.onCall((data, context) => {
@@ -72,27 +73,61 @@ exports.postQueue = functions.https.onCall((data, context) => {
       'please provide a queue and an id to post'
     );
   }
-
-  return postQueue(data.queue);
+ 
+  postQueue(data.queue);
 });
 
+exports.createNewQueue = functions.https.onCall((data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'only authenticated users can create a queue'
+    )
+  }
+  if (!data.uid) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'please provide a uid to associate with the queue'
+    );
+  }
+
+  if(!data.name) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'please provide a business name to associate with the queue'
+    );
+  }
+
+  const queueParams : [string, Date, string, boolean, Party[]]= [
+    data.name,
+    new Date('2020-08-30'),
+    data.uid,
+    false,
+    []
+  ]
+
+  const newQueue = new Queue(...queueParams);
+
+  postQueue(newQueue);
+  return newQueue;
+})
 
 // App functions
 
 // Business location - pull
-exports.getBusinessLocation = functions.https.onCall((data, context) => {
+exports.getBusinessLocation = functions.https.onCall(async (data, context) => {
   if (!data.uid) {
     throw new functions.https.HttpsError(
       'invalid-argument',
       'please provide a business uid'
     );
   }
-  return getBusinessLocation(data.uid);
+  return await getBusinessLocation(data.uid);
 });
 // Customer profile
 // - push
 // - pull
-exports.getCustomer = functions.https.onCall((data, context) => {
+exports.getCustomer = functions.https.onCall(async (data, context) => {
   // check auth state
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -100,7 +135,7 @@ exports.getCustomer = functions.https.onCall((data, context) => {
       'only authenticated users can vote up requests'
     );
   }
-  return getCustomer(context.auth.uid);
+  return await getCustomer(context.auth.uid);
 });
 
 exports.postCustomer = functions.https.onCall((data, context) => {
@@ -110,17 +145,17 @@ exports.postCustomer = functions.https.onCall((data, context) => {
       'please provide a customer to post'
     );
   }
-  return postCustomer(data.customer);
+  postCustomer(data.customer);
 });
 // Queue mini
-exports.getQueueInfo = functions.https.onCall((data, context) => {
+exports.getQueueInfo = functions.https.onCall(async (data, context) => {
   if (!data.uid) {
     throw new functions.https.HttpsError(
       'invalid-argument',
       'please provide a business uid'
     );
   }
-  return getQueueInfo(data.uid);
+  return await getQueueInfo(data.uid);
 });
 
 // Listeners functions:
