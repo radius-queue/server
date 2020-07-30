@@ -1,6 +1,7 @@
 import {Customer} from './customer';
 import {firestore} from '../firestore';
 import { FirebaseError } from 'firebase-admin';
+import * as functions from 'firebase-functions';
 
 /**
  * Get Customer from database based on uid
@@ -23,10 +24,13 @@ export default async function getCustomer(uid : string) {
             recents: data.recents,
           };
         } else {
-          console.log('No such document!');
+          throw new functions.https.HttpsError(
+            'unauthenticated',
+            'only authenticated users can vote up requests'
+          );
         }
       }).catch(function(error: FirebaseError) {
-        console.log('Error getting document:', error);
+        throw error;
       });
 
   if (ret) {

@@ -16,5 +16,5 @@ export default function postCustomer(c : Customer) {
     favorites: c.favorites,
     recents: c.recents,
   };
-  firestore.collection('customer').doc(c.uid).set(data);
+  return firestore.collection('customer').doc(c.uid).set(data);
 }

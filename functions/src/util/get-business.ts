@@ -34,3 +34,19 @@ export default async function getBusiness(uid : string) {
   }
   return ret;
 }
+
+export async function getBusinessLocation(uid : string) {
+  let ret: BusinessLocation | undefined;
+  await firestore.collection('businesses').doc(uid)
+      .get().then(function(doc: FirebaseFirestore.DocumentData) {
+        if (doc.exists) {
+          const data = doc.data().locations[0];
+          ret =  BusinessLocation.fromFirebase(data);
+        } else {
+          console.log('No such document!');
+        }
+      }).catch(function(error: FirebaseError) {
+        console.log('Error getting document:', error);
+      });
+  return ret;
+}
