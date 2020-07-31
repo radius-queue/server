@@ -125,7 +125,7 @@ app.post('/api/queues', async (req, res) => {
   }
 
   res.sendStatus(201);
- 
+
 });
 
 
@@ -151,7 +151,7 @@ app.get('/api/queues/new', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
-  
+
   res.status(201).json({...newQueue});
 });
 
@@ -168,11 +168,10 @@ app.get('/api/businesses/locations', async (req, res) => {
         if (doc.exists) {
           const data = doc.data().locations[0];
           ret =  BusinessLocation.fromFirebase(data);
-        } 
+        }
       }).catch(function(error: admin.FirebaseError) {
         console.log('Error getting document:', error);
       });
-  
 
   res.status(200).json(ret);
 });
