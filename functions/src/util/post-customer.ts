@@ -1,11 +1,11 @@
-import {Customer} from './customer';
-import {firestore} from '../firestore';
+/*import {Customer} from './customer';
+import {firestore} from '../index';
 
 /**
  * upload Customer object to firebase server.
  * if already exist replaces old entry, else creates new one
  * @param {Customer} c customer object to be pushed to database
- */
+ 
 export default function postCustomer(c : Customer) {
   const data: any = {
     firstName: c.firstName,
@@ -18,3 +18,4 @@ export default function postCustomer(c : Customer) {
   };
   return firestore.collection('customer').doc(c.uid).set(data);
 }
+*/

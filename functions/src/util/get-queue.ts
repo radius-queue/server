@@ -1,11 +1,11 @@
+/*
 import {Queue, Party, QueueInfo, diff_minutes} from './queue';
-import {firestore} from '../firestore';
 import { FirebaseError } from 'firebase-admin';
 
-/**
+**
  * Get Queue from database based on uid
  * @param {string} uid queue uid
- */
+ *
 export default async function getQueue(uid : string) {
   let ret: Queue | undefined;
   await firestore.collection('queues').doc(uid)
@@ -53,4 +53,4 @@ export async function getQueueInfo(uid : string) {
       
   return ret;
 }
-
+*/

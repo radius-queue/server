@@ -1,27 +1,23 @@
-import {firestore} from '../firestore';
 /**
  * This class represents a queue
  */
 export class Queue {
   name : string;
   parties: Party[]; // where parties[0] is the front of the line
-  end: Date;
   uid : string;
   open: boolean;
 
   /**
    * @param {string} name Name of Queue
-   * @param {Date} end End time
    * @param {string} uid Uid of Queue
    * @param {boolean} open true if queue is open
    * @param {Party[]} parties Optional field for initializing current queue,
    *    Default value is set to empty array
    */
-  constructor(name: string, end: Date, uid: string, open: boolean,
+  constructor(name: string, uid: string, open: boolean,
       parties?: Party[]) {
     this.name = name;
     this.parties = parties ? parties :[];
-    this.end = end;
     this.open = open;
     this.uid = uid;
   }
@@ -33,11 +29,11 @@ export class Queue {
 export class Party {
   firstName: string;
   lastName: string;
-  checkIn : Date;
+  checkIn : string;
   size: number;
   phoneNumber: string;
   quote: number;
-  messages: [Date, string][];
+  messages: [string, string][];
   // uid: string;
 
   /**
@@ -45,15 +41,15 @@ export class Party {
    * @param {number} size Size of the party
    * @param {string} phoneNumber phoneNumber of the party
    * @param {number} quote The given estimated time to be called
-   * @param {Date} checkIn Optional time when customer checked in.
+   * @param {string} checkIn Optional time when customer checked in.
    *    Default is set to now.
    * @param {string} lastName last name
-   * @param {[Date, string][]} messages array of Date, string pairs as messages
+   * @param {[string, string][]} messages array of Date, string pairs as messages
    *    for the party
    */
   constructor(firstName: string, size: number, phoneNumber: string,
-      quote:number, checkIn : Date= new Date(), lastName : string = '',
-      messages: [Date, string][] = []) {
+      quote:number, checkIn : string= new Date().toString(), lastName : string = '',
+      messages: [string, string][] = []) {
     this.firstName = firstName;
     this.lastName = lastName;
     this.checkIn = checkIn;
@@ -67,16 +63,16 @@ export class Party {
   /**
    *
    * @param {any[]} messages firebase entry for messages
-   * @return {[Date, string][]} messages representation
+   * @return {[string, string][]} messages representation
    */
-  static messageFromFB(messages: any[]): [Date, string][] {
-    const ret : [Date, string][] = [];
+  static messageFromFB(messages: any[]): [string, string][] {
+    const ret : [string, string][] = [];
     if (messages) {
       for (const message of messages) {
-        const entry : [Date, string] =[new Date(), ''];
-        entry[0] = message.date.toDate();
+        const entry = [];
+        entry[0] = message.date.toDate().toString();
         entry[1] = message.message;
-        ret.push(entry);
+        ret.push(entry as [string, string]);
       }
     }
     return ret;
@@ -84,10 +80,10 @@ export class Party {
 
   /**
    *
-   * @param {[Date, string][]} messages
+   * @param {[string, string][]} messages
    * @return {any[]} firebase representation of messages
    */
-  static messageToFB(messages: [Date, string][]) : any[] {
+  static messageToFB(messages: [string, string][]) : any[] {
     const ret : any[] = [];
     if (messages) {
       for (const message of messages) {
@@ -105,13 +101,13 @@ export class Party {
   * @param party
   */
   static fromFirebase(party: any): Party {
-    const partyPrams : [string, number, string, number, Date, string,
-        [Date, string][]] = [
+    const partyPrams : [string, number, string, number, string, string,
+        [string, string][]] = [
           party.firstName,
           party.size,
           party.phoneNumber,
           party.quote,
-          party.checkIn.toDate(),
+          party.checkIn.toDate().toString(),
           party.lastName,
           this.messageFromFB(party.messages),
         ];
@@ -120,23 +116,24 @@ export class Party {
 
   /**
     * @param party
-    */
+    
   static toFirebase(party: Party): any {
     return {
       firstName: party.firstName,
       size: party.size,
       phoneNumber: party.phoneNumber,
       quote: party.quote,
-      checkIn: firestore.Timestamp.fromDate(party.checkIn),
+      checkIn: firestore.Timestamp.fromDate(new Date(party.checkIn)),
       lastName: party.lastName,
       messages: this.messageToFB(party.messages),
     };
   }
+  */
 }
 
 export const Q_COLUMNS : string[] = ['#', 'Name', 'Party Size', 'Quoted Time'];
 
-export const queueConverter = {
+/*export const queueConverter = {
   toFirestore: function(q: Queue) {
     return {
       name: q.name,
@@ -156,7 +153,7 @@ export const queueConverter = {
     );
   },
 };
-
+*/
 
 /**
  * This class represents a queue
@@ -167,7 +164,7 @@ export interface QueueInfo {
   open: boolean;
 }
 
-export const queueInfoConverter = {
+/*export const queueInfoConverter = {
   toFirestore: function(q: Queue) {
     return {
       name: q.name,
@@ -186,4 +183,4 @@ export function diff_minutes(dt2: Date, dt1: Date) {
   let diff =(dt2.getTime() - dt1.getTime()) / 1000;
   diff /= 60;
   return Math.abs(Math.round(diff));
-}
+}*/

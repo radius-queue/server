@@ -1,14 +1,20 @@
-const admin = require('firebase-admin');
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
 
 admin.initializeApp();
 
-import * as functions from 'firebase-functions';
-import getQueue, {getQueueInfo} from './util/get-queue';
-import getCustomer from './util/get-customer';
-import postCustomer from './util/post-customer';
-import getBusiness, { getBusinessLocation } from './util/get-business';
-import postBusiness from './util/post-business';
-import postQueue from './util/post-queue';
+
+import * as express from 'express';
+const app = express();
+
+const cors = require('cors');
+app.use(cors({origin: true}));
+
+const firestore = admin.firestore();
+//const auth = admin.auth();
+//const storage = admin.storage();
+
+import {BusinessLocation} from './util/business';
 import { Queue, Party } from './util/queue';
 
 
@@ -20,144 +26,213 @@ import { Queue, Party } from './util/queue';
 // - pull
 // Full Queue -- parties (one time call, pull)
 
-exports.getBusiness = functions.https.onCall(async (data, context) => {
-  if (!data.uid) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a business uid'
-    );
+/**
+ * ALL DATE OBJECTS ARE RETURNED AS DATE STRINGS,
+ * MUST CONVERT TO DATE OBJECTS UPON RETREIVAL
+ */
+
+app.get('/api/businesses', async (req, res) => {
+  const uid : string = req.query.uid as string;
+
+  let result : any;
+  await firestore.collection('businesses').doc(uid)
+  .get().then(function(doc: admin.firestore.DocumentData) {
+    if (doc.exists) {
+      const data = doc.data();
+      result = {
+        name: data.name,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        uid: '',
+        type: data.type,
+        locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(e))
+      }
+    }
+  }).catch(function() {
+    res.sendStatus(500);
+  });
+
+  if (result) {
+    result.uid = uid;
   }
 
-  if (!context.auth || context.auth.uid !== data.uid) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'only authenticated users can access their data'
-    );
-  }
-
-  return await getBusiness(data.uid);
+  res.status(200).json(result);
 });
 
-exports.postBusiness = functions.https.onCall((data, context) => {
-  if (!data.business) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a business uid to post'
-    );
+app.post('/api/businesses', async (req, res) => {
+  const business = req.body;
+
+  business.locations = locationToFirebase(business.locations);
+
+  try {
+    await firestore.collection('businesses').doc(business.uid).set(business);
+  } catch (error) {
+    res.sendStatus(500);
   }
 
-  if (!context.auth || context.auth.uid !== data.business.uid) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'only authenticated users can post their information'
-    );
-  }
-  postBusiness(data.business);
+  res.sendStatus(201);
 });
 
-exports.getQueue = functions.https.onCall(async (data, context) => {
-  if (data.queueID) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a queue id'
-    );
+
+/**
+ * returns a queue wherein each party object's date fields are string
+ * representations. Make sure to convert back to Date objects upon retreival.
+ */
+app.get('/api/queues', async (req, res) => {
+  const uid : string = req.query.uid as string;
+
+  let ret : any;
+  await firestore.collection('queues').doc(uid)
+      .get().then(function(doc: admin.firestore.DocumentData) {
+        if (doc.exists) {
+          const data = doc.data();
+          ret = {
+            name: data.name,
+            uid: '',
+            open: data.open,
+            parties: data.parties.map((party: any)=> Party.fromFirebase(party)),
+          }
+        }
+      }).catch(function(error) {
+        res.status(500).send('Error On Firestore Entry');
+      });
+
+  if (ret) {
+    ret.uid = uid;
   }
 
-  return await getQueue(data.uid);
+  res.status(200).json(ret);
+
 });
 
-exports.postQueue = functions.https.onCall((data, context) => {
-  if (!data.queue || !data.queue.uid) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a queue and an id to post'
-    );
+
+
+
+app.post('/api/queues', async (req, res) => {
+
+  const queue : Queue = req.body;
+  let data;
+  try {
+    data = {
+      name: queue.name,
+      parties: queue.parties.map((e) => partyToFirebase(e)),
+      open: queue.open,
+    };
+    await firestore.collection('queues').doc(queue.uid).set(data);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
+
+  res.sendStatus(201);
  
-  postQueue(data.queue);
 });
 
-exports.createNewQueue = functions.https.onCall((data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'only authenticated users can create a queue'
-    )
-  }
-  if (!data.uid) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a uid to associate with the queue'
-    );
-  }
 
-  if(!data.name) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a business name to associate with the queue'
-    );
-  }
 
-  const queueParams : [string, Date, string, boolean, Party[]]= [
-    data.name,
-    new Date('2020-08-30'),
-    data.uid,
+
+
+app.get('/api/queues/new', async (req, res) => {
+
+  const name : string = req.query.name as string;
+  const uid : string = req.query.uid as string;
+
+  const queueParams : [string, string, boolean, Party[]]= [
+    name,
+    uid,
     false,
     []
-  ]
+  ];
 
   const newQueue = new Queue(...queueParams);
 
-  postQueue(newQueue);
-  return newQueue;
-})
+  try {
+    await firestore.collection('queues').doc(newQueue.uid).set({...newQueue});
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+  
+  res.status(201).json({...newQueue});
+});
 
 // App functions
 
 // Business location - pull
-exports.getBusinessLocation = functions.https.onCall(async (data, context) => {
-  if (!data.uid) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a business uid'
-    );
-  }
-  return await getBusinessLocation(data.uid);
+app.get('/api/businesses/locations', async (req, res) => {
+
+  const uid : string = req.query.uid as string;
+
+  let ret: BusinessLocation | undefined;
+  await firestore.collection('businesses').doc(uid)
+      .get().then(function(doc: admin.firestore.DocumentData) {
+        if (doc.exists) {
+          const data = doc.data().locations[0];
+          ret =  BusinessLocation.fromFirebase(data);
+        } 
+      }).catch(function(error: admin.FirebaseError) {
+        console.log('Error getting document:', error);
+      });
+  
+
+  res.status(200).json(ret);
 });
+
+exports.widgets = functions.https.onRequest(app);
+
 // Customer profile
 // - push
 // - pull
-exports.getCustomer = functions.https.onCall(async (data, context) => {
-  // check auth state
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'only authenticated users can vote up requests'
-    );
-  }
-  return await getCustomer(context.auth.uid);
-});
 
-exports.postCustomer = functions.https.onCall((data, context) => {
-  if (!data.customer) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a customer to post'
-    );
-  }
-  postCustomer(data.customer);
-});
-// Queue mini
-exports.getQueueInfo = functions.https.onCall(async (data, context) => {
-  if (!data.uid) {
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'please provide a business uid'
-    );
-  }
-  return await getQueueInfo(data.uid);
-});
+
+// TODO:
+
+  // getCustomer
+  // postCustomer
+  // getQueueInfo
+
 
 // Listeners functions:
 
 // Customer profile init - empty recents etc
+
+
+function locationToFirebase(location: BusinessLocation): any {
+  return {
+    name: location.name,
+    address: location.address,
+    phoneNumber: location.phoneNumber,
+    hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
+    coordinates: new admin.firestore.GeoPoint(
+        location.coordinates[0],
+        location.coordinates[1],
+    ),
+    queues: location.queues,
+    geoFenceRadius: location.geoFenceRadius,
+  };
+};
+
+function partyToFirebase(party: Party): any {
+  return {
+    firstName: party.firstName,
+    size: party.size,
+    phoneNumber: party.phoneNumber,
+    quote: party.quote,
+    checkIn: admin.firestore.Timestamp.fromDate(new Date(party.checkIn)),
+    lastName: party.lastName,
+    messages: messageToFB(party.messages),
+  };
+}
+
+function messageToFB(messages: [string, string][]) : any[] {
+  const ret : any[] = [];
+  if (messages) {
+    for (const message of messages) {
+      const entry = {
+        date: message[0],
+        message: message[1],
+      };
+      ret.push(entry);
+    }
+  }
+  return ret;
+}

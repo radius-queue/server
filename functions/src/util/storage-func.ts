@@ -1,4 +1,4 @@
-import {auth, storage} from '../firestore';
+/*import {auth, storage} from '../index';
 import { FirebaseError } from 'firebase-admin';
 
 /**
@@ -9,7 +9,7 @@ import { FirebaseError } from 'firebase-admin';
  * @param {JSON} metadata set of metadata
  * @param {function} callback takes in download url if successful post, empty
  *  string if failed
- */
+ 
 export function postPic(file: File, isBusiness: boolean,
     metadataParam: any = undefined, callback: (URL : string) => void) {
   const storageRef = storage.ref();
@@ -53,7 +53,7 @@ export function postPic(file: File, isBusiness: boolean,
  * @param {string} path path to access image (ex: businessImages/IMG_1391.HEIC)
  * @param {function} callback takes in return value of download url on
  *  successful get (ex: console.log)
- */
+ 
 export function getPic(path: string, callback: (URL : string) => void) {
   const storageRef = storage.ref();
   const starsRef = storageRef.child(path);
@@ -67,3 +67,4 @@ export function getPic(path: string, callback: (URL : string) => void) {
     // https://firebase.google.com/docs/storage/web/handle-errors
   });
 }
+*/

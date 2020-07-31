@@ -1,4 +1,3 @@
-import {firestore} from '../firestore';
 /**
  * This class represents a Business
  */ 
@@ -42,7 +41,7 @@ export class BusinessLocation {
   name: string;
   address: string;
   phoneNumber: string;
-  hours: [Date | null, Date | null][];
+  hours: [string | null, string | null][];
   coordinates: number[]; // in decimal degrees (DD).
   queues: string[];
   geoFenceRadius: number; // in meters
@@ -52,7 +51,7 @@ export class BusinessLocation {
    * @param {string} name Name of specific location
    * @param {string} address Address of location
    * @param {string} phoneNumber phone number of the location
-   * @param {[Date | null, Date | null][]} hours business hours for queue operation as array
+   * @param {[string | null, string | null][]} hours business hours for queue operation as array
    *    of Date object pairs.
    * @param {number[]} coordinates Geographic coordinates of location in
    *    decimal degrees (DD). ex: [41.40338, 2.17403] lat, long
@@ -63,7 +62,7 @@ export class BusinessLocation {
    *    of -1
    * @param {string[]} images array of string urls that correspond to uploaded images from the business 
    */
-  constructor(name: string, address: string, phoneNumber: string, hours: [Date | null, Date | null][],
+  constructor(name: string, address: string, phoneNumber: string, hours: [string | null, string | null][],
       coordinates: number[], queues: string[] = [],
       geoFenceRadius: number = -1, images: string[] = []) {
     this.name = name;
@@ -84,7 +83,7 @@ export class BusinessLocation {
   * @return {BusinessLocation} equivalent js object
   */
   static fromFirebase(location: any): BusinessLocation {
-    const locPrams : [string, string, string, [Date | null, Date | null][], number[],
+    const locPrams : [string, string, string, [string | null, string | null][], number[],
      string[], number, string[]] = [
        location.name,
        location.address,
@@ -104,7 +103,7 @@ export class BusinessLocation {
   * @param {BusinessLocation} location js object
   * @return {object} equivalent firebase location object
   */
-  static toFirebase(location: BusinessLocation): any {
+  /*static toFirebase(location: BusinessLocation): any {
     return {
       name: location.name,
       address: location.address,
@@ -117,18 +116,18 @@ export class BusinessLocation {
       queues: location.queues,
       geoFenceRadius: location.geoFenceRadius,
     };
-  };
+  };*/
 
   /**
    *
    * @param hours
    */
-  static hoursToFirebase(hours: [Date | null, Date | null][]): any {
+  static hoursToFirebase(hours: [string | null, string | null][]): any {
     const ret: {[id:string]: [Date | null, Date | null]} = {};
     for (let i = 0; i < DATE_INDEX.size; i++) {
       const day = hours[i];
       const dayName: string = DATE_INDEX.get(i)!;
-      ret[dayName] = [day[0] ? day[0] : null, day[1] ? day[1] : null];
+      ret[dayName] = [day[0] ? new Date(day[0]) : null, day[1] ? new Date(day[1]) : null];
     }
     return ret;
   }
@@ -137,17 +136,17 @@ export class BusinessLocation {
    *
    * @param hour
    */
-  static hoursFromFirebase(hours: any): [Date | null, Date | null][] {
-    const ret: [Date | null, Date | null][] = [];
+  static hoursFromFirebase(hours: any): [string | null, string | null][] {
+    const ret: [string | null, string | null][] = [];
     for (let i = 0; i < DATE_INDEX.size; i++) {
       const day = hours[(DATE_INDEX.get(i))!];
-      ret.push([!day[0] ? null : day[0].toDate(), !day[1] ? null : day[1].toDate()]);
+      ret.push([!day[0] ? null : day[0].toDate().toString(), !day[1] ? null : day[1].toDate().toString()]);
     }
     return ret;
   }
 }
 
-export const businessConverter = {
+/*export const businessConverter = {
   toFirestore: function(b: Business) {
     return {
       name: b.name,
@@ -170,7 +169,7 @@ export const businessConverter = {
         data.locations.map((e: any) => BusinessLocation.fromFirebase(e)),
     );
   },
-};
+};*/
 
 export function getHoursArray(input: [string, string][]) {
   const result : [Date | null, Date | null][] = [];

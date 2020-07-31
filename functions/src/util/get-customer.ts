@@ -1,12 +1,12 @@
-import {Customer} from './customer';
-import {firestore} from '../firestore';
+/**
+ * import {Customer} from './customer';
 import { FirebaseError } from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
-/**
+
  * Get Customer from database based on uid
  * @param {string} uid customer uid
- */
+ *
 export default async function getCustomer(uid : string) {
   let ret: Customer | undefined;
   await firestore.collection('customer').doc(uid)
@@ -38,3 +38,4 @@ export default async function getCustomer(uid : string) {
   }
   return ret;
 }
+*/

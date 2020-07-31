@@ -1,12 +1,11 @@
-
-import {firestore} from '../firestore';
+/**
 import {Business, BusinessLocation} from './business';
 import { FirebaseError } from 'firebase-admin';
 
-/**
+
  * Get Business from database based on uid
  * @param {string} uid business uid
- */
+ *
 export default async function getBusiness(uid : string) {
   let ret: Business | undefined;
   await firestore.collection('businesses').doc(uid)
@@ -23,7 +22,7 @@ export default async function getBusiness(uid : string) {
             locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(e))
           }
         } else {
-          console.log('No such document!');
+          console.log('No Such Document');
         }
       }).catch(function(error: FirebaseError) {
         console.log('Error getting document:', error);
@@ -50,3 +49,4 @@ export async function getBusinessLocation(uid : string) {
       });
   return ret;
 }
+*/
