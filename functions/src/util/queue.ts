@@ -70,7 +70,7 @@ export class Party {
     if (messages) {
       for (const message of messages) {
         const entry = [];
-        entry[0] = message.date.toDate().toString();
+        entry[0] = message.date;
         entry[1] = message.message;
         ret.push(entry as [string, string]);
       }
@@ -107,7 +107,7 @@ export class Party {
           party.size,
           party.phoneNumber,
           party.quote,
-          party.checkIn.toDate().toString(),
+          party.checkIn,
           party.lastName,
           this.messageFromFB(party.messages),
         ];

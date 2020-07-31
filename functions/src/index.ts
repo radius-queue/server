@@ -60,16 +60,12 @@ app.get('/api/businesses', async (req, res) => {
   res.status(200).json(result);
 });
 
+
+
 app.post('/api/businesses', async (req, res) => {
-  const business = req.body;
-
-  business.locations = locationToFirebase(business.locations);
-
-  try {
-    await firestore.collection('businesses').doc(business.uid).set(business);
-  } catch (error) {
-    res.sendStatus(500);
-  }
+  const business = req.body.business;
+  
+  await firestore.collection('businesses').doc(business.uid).set(business);
 
   res.sendStatus(201);
 });
@@ -111,7 +107,7 @@ app.get('/api/queues', async (req, res) => {
 
 app.post('/api/queues', async (req, res) => {
 
-  const queue : Queue = req.body;
+  const queue : Queue = req.body.queue;
   let data;
   try {
     data = {
@@ -155,6 +151,8 @@ app.get('/api/queues/new', async (req, res) => {
   res.status(201).json({...newQueue});
 });
 
+
+
 // App functions
 
 // Business location - pull
@@ -195,7 +193,7 @@ exports.widgets = functions.https.onRequest(app);
 // Customer profile init - empty recents etc
 
 
-function locationToFirebase(location: BusinessLocation): any {
+/*function locationToFirebase(location: BusinessLocation): any {
   return {
     name: location.name,
     address: location.address,
@@ -208,7 +206,7 @@ function locationToFirebase(location: BusinessLocation): any {
     queues: location.queues,
     geoFenceRadius: location.geoFenceRadius,
   };
-};
+};*/
 
 function partyToFirebase(party: Party): any {
   return {
@@ -216,7 +214,7 @@ function partyToFirebase(party: Party): any {
     size: party.size,
     phoneNumber: party.phoneNumber,
     quote: party.quote,
-    checkIn: admin.firestore.Timestamp.fromDate(new Date(party.checkIn)),
+    checkIn: party.checkIn,
     lastName: party.lastName,
     messages: messageToFB(party.messages),
   };

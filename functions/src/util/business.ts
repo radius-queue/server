@@ -123,11 +123,11 @@ export class BusinessLocation {
    * @param hours
    */
   static hoursToFirebase(hours: [string | null, string | null][]): any {
-    const ret: {[id:string]: [Date | null, Date | null]} = {};
+    const ret: {[id:string]: [string | null, string | null]} = {};
     for (let i = 0; i < DATE_INDEX.size; i++) {
       const day = hours[i];
       const dayName: string = DATE_INDEX.get(i)!;
-      ret[dayName] = [day[0] ? new Date(day[0]) : null, day[1] ? new Date(day[1]) : null];
+      ret[dayName] = [day[0] ? day[0] : null, day[1] ? day[1] : null];
     }
     return ret;
   }
