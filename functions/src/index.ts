@@ -1,5 +1,12 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
+const mkdirp = require('mkdirp');
+const spawn = require('child-process-promise').spawn;
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+const gcs = require('@google-cloud/storage')();
+const sharp = require('sharp');
 
 admin.initializeApp();
 
@@ -126,7 +133,7 @@ app.post('/api/queues', async (req, res) => {
   }
 
   res.sendStatus(201);
- 
+
 });
 
 
@@ -152,7 +159,7 @@ app.get('/api/queues/new', async (req, res) => {
   } catch (error) {
     res.status(500).send(error.message);
   }
-  
+
   res.status(201).json({...newQueue});
 });
 
@@ -171,11 +178,10 @@ app.get('/api/businesses/locations', async (req, res) => {
         if (doc.exists) {
           const data = doc.data().locations[0];
           ret =  BusinessLocation.fromFirebase(data);
-        } 
+        }
       }).catch(function(error: admin.FirebaseError) {
         console.log('Error getting document:', error);
       });
-  
 
   res.status(200).json(ret);
 });
@@ -254,3 +260,70 @@ function businessLocationToFirebase(location: any) {
     geoFenceRadius: location.geoFenceRadius,
   };
 }
+const JPEG_EXTENSION = '.jpg';
+const IMAGE_MAX_WIDTH = 1080;
+const IMAGE_MAX_HEIGHT = 1350;
+
+/**
+ * When an image is uploaded in the Storage bucket it is converted to JPEG,
+ * and resized
+ */
+exports.imageToJPG = functions.storage.object().onFinalize(async (object) => {
+  const filePath = object.name; // File path in the bucket.
+  const baseFileName = path.basename(filePath, path.extname(filePath)); // file name without extension
+  const fileDir = path.dirname(filePath); // Directory of the file
+  const JPEGFilePath = path.normalize(path.format({dir: fileDir, name: baseFileName, ext: JPEG_EXTENSION})); // final path
+  const tempLocalFile = path.join(os.tmpdir(), filePath); // Copy of file in temp
+  const tempLocalDir = path.dirname(tempLocalFile); // temp directory
+  const tempLocalJPEGFile = path.join(os.tmpdir(), JPEGFilePath); // JPEG version of file in temp
+  const contentType = object.contentType; // File content type.
+  const metadata = {
+    contentType: contentType,
+  };
+
+  // Exit if this is triggered on a file that is not an image.
+  if (!contentType!.startsWith('image/')) {
+    console.log('This is not an image.');
+    return null;
+  }
+
+  const bucket = admin.storage().bucket(object.bucket);
+  // Create the temp directory where the storage file will be downloaded.
+  await mkdirp(tempLocalDir);
+  // Download file from bucket.
+  await bucket.file(filePath!).download({destination: tempLocalFile});
+  //console.log('The file has been downloaded to', tempLocalFile);
+
+  // if the image is not JPEG.
+  if (!object.contentType!.startsWith('image/jpeg')) {
+    // Convert the image to JPEG using ImageMagick.
+    await spawn('convert', [tempLocalFile, tempLocalJPEGFile]);
+    //console.log('JPEG image created at', tempLocalJPEGFile);
+  }
+
+  const thumbnailUploadStream = bucket.file(JPEGFilePath).createWriteStream({metadata});
+
+  // Create Sharp pipeline for resizing the image and use pipe to read from bucket read stream
+  const pipeline = sharp();
+  pipeline.resize(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT).max().pipe(thumbnailUploadStream);
+
+  bucket.file(tempLocalJPEGFile).createReadStream().pipe(pipeline);
+
+  const resizeMessage = await new Promise((resolve, reject) =>
+      thumbnailUploadStream.on('finish', resolve).on('error', reject));
+  console.log(resizeMessage);
+
+  if (resizeMessage === 'finish') {
+    // delete old image
+    bucket.file(filePath!).delete().then(() => {
+      console.log(`Successfully deleted photo ${filePath}`)
+    }).catch(err => {
+        console.log(`Failed to remove photo, error: ${err}`)
+    });
+  }
+
+  // Once the image has been converted delete the local files to free up disk space.
+  fs.unlinkSync(tempLocalJPEGFile);
+  fs.unlinkSync(tempLocalFile);
+  return null;
+});
