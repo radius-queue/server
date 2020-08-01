@@ -63,8 +63,13 @@ app.get('/api/businesses', async (req, res) => {
 
 
 app.post('/api/businesses', async (req, res) => {
-  const business = req.body.business;
-  
+
+  const business = {
+    ...req.body.business,
+    locations: [businessLocationToFirebase(req.body.business.locations[0])],
+  };
+
+
   await firestore.collection('businesses').doc(business.uid).set(business);
 
   res.sendStatus(201);
@@ -233,4 +238,19 @@ function messageToFB(messages: [string, string][]) : any[] {
     }
   }
   return ret;
+}
+
+function businessLocationToFirebase(location: any) {
+  return {
+    name: location.name,
+    address: location.address,
+    phoneNumber: location.phoneNumber,
+    hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
+    coordinates: new admin.firestore.GeoPoint(
+        location.coordinates[0],
+        location.coordinates[1],
+    ),
+    queues: location.queues,
+    geoFenceRadius: location.geoFenceRadius,
+  };
 }

@@ -140,7 +140,7 @@ export class BusinessLocation {
     const ret: [string | null, string | null][] = [];
     for (let i = 0; i < DATE_INDEX.size; i++) {
       const day = hours[(DATE_INDEX.get(i))!];
-      ret.push([!day[0] ? null : day[0].toDate().toString(), !day[1] ? null : day[1].toDate().toString()]);
+      ret.push([!day[0] ? null : day[0], !day[1] ? null : day[1]]);
     }
     return ret;
   }
