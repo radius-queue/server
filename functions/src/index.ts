@@ -35,16 +35,16 @@ import { Queue, Party, QueueInfo } from './util/queue';
  * GET /api/businesses
  * Retreival of all business information for a specific business
  * using the Radius service
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the business that is being retreived
- * 
- * Body Content: 
+ *
+ * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  object of type business that has the uid passed in
- * 
+ *
  * Error Cases:
  *  400 -> No uid in query
  *  404 -> No business found with that uid
@@ -89,17 +89,17 @@ app.get('/api/businesses', async (req, res) => {
  * POST /api/businesses
  * Post of a businesses information upon registering or updating
  * their profile page
- * 
- * Query params: 
+ *
+ * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  JSON object with one property called "business" that
  *  holds the business' information.
- * 
+ *
  * Response Result:
  *  Empty content with status of 201
- * 
+ *
  * Error Cases:
  *  400 -> No business property in body
  *  500 -> Error in accessing firebase
@@ -128,16 +128,16 @@ app.post('/api/businesses', async (req, res) => {
 /**
  * GET /api/queues
  * Retreival of queue information for a specified business
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the business whose queue is being retreived
- * 
- * Body Content: 
+ *
+ * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  object of type Queue from the business whose uid is passed in
- * 
+ *
  * Error Cases:
  *  400 -> No uid in query
  *  404 -> No queue found with that uid
@@ -180,17 +180,17 @@ app.get('/api/queues', async (req, res) => {
 /**
  * POST /api/queues
  * Post of a businesses' queue information
- * 
- * Query params: 
+ *
+ * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  JSON object with one property called "queue" that
  *  holds the business' queue information.
- * 
+ *
  * Response Result:
  *  Empty content with status of 201
- * 
+ *
  * Error Cases:
  *  400 -> No queue property in body
  *  500 -> Error in accessing firebase
@@ -224,25 +224,25 @@ app.post('/api/queues', async (req, res) => {
 /**
  * POST /api/queues/new
  * Creation of a new queue for the specified business
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the business whom creation is taking place
  *  name: the name of the queue's business
- * 
+ *
  * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  JSON object that represents a brand new queue that can
  *  be manipulated by the client, has status of 201
- * 
+ *
  * Error Cases:
  *  400 -> No uid or name in query
  *  500 -> Error in accessing firebase
  */
 app.post('/api/queues/new', async (req, res) => {
   let name : string | undefined;
-  let uid : string | undefined; 
+  let uid : string | undefined;
 
   try {
     name = req.query.name as string;
@@ -271,17 +271,17 @@ app.post('/api/queues/new', async (req, res) => {
  * GET /api/businesses/locations
  * Retreival of all business information for a specific business
  * using the Radius service
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the business that is being retreived
- * 
- * Body Content: 
+ *
+ * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  object of type BusinessLocation that has the uid passed in,
  *  and status 200.
- * 
+ *
  * Error Cases:
  *  400 -> No uid in query
  *  404 -> No business found with that uid
@@ -314,17 +314,17 @@ app.get('/api/businesses/locations', async (req, res) => {
 /**
  * GET /api/customers
  * Retreival of customer information
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the customer that is being retreived
- * 
- * Body Content: 
+ *
+ * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  object of type Customer that has the uid passed in,
  *  and status 200.
- * 
+ *
  * Error Cases:
  *  400 -> No uid in query
  *  404 -> No customer found with that uid
@@ -359,7 +359,7 @@ app.get('/api/customers', async (req, res) => {
     }).catch(() => {
       res.sendStatus(500);
     });
-    
+
   ret!.uid = uid!;
 
   res.status(200).json(ret!);
@@ -369,17 +369,17 @@ app.get('/api/customers', async (req, res) => {
  * POST /api/customers
  * Post of customer information upon adding a favorite, recent
  * or updating information
- * 
- * Query params: 
+ *
+ * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  JSON object with one property called "customer" that
  *  holds the customer information.
- * 
+ *
  * Response Result:
  *  Empty content object with status of 201
- * 
+ *
  * Error Cases:
  *  400 -> No customer property in body
  *  500 -> Error in accessing firebase
@@ -404,10 +404,10 @@ app.post('/api/customers', async (req, res) => {
 /**
  * POST /api/customers/new
  * Creation of a new customer
- * 
- * Query params: 
+ *
+ * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  JSON object with the following properties: {
  *   firstName: string,
@@ -416,11 +416,11 @@ app.post('/api/customers', async (req, res) => {
  *   phoneNumber: string,
  *   uid: string,
  * }
- * 
+ *
  * Response Result:
  *  JSON object that represents a brand new queue that can
  *  be manipulated by the client, has status of 201
- * 
+ *
  * Error Cases:
  *  400 -> No uid or name in query
  *  500 -> Error in accessing firebase
@@ -443,7 +443,7 @@ app.post('/api/customers/new', async (req, res) => {
     };
   } catch {
     res.status(400).send('Malformed Request');
-  } 
+  }
 
   try {
     await firestore.collection('customer').doc(customer.uid).set(result!);
@@ -458,17 +458,17 @@ app.post('/api/customers/new', async (req, res) => {
 /**
  * GET /api/queues
  * Retreival of queue status information for a specified business
- * 
- * Query params: 
+ *
+ * Query params:
  *  uid: the id of the business whose queue is being retreived
- * 
- * Body Content: 
+ *
+ * Body Content:
  *  None
- * 
+ *
  * Response Result:
  *  object of type QueueInfo from the business whose uid is passed in.
  *  Consists of the length, status and longest wait time for the queue.
- * 
+ *
  * Error Cases:
  *  400 -> No uid in query
  *  404 -> No queue found with that uid
