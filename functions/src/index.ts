@@ -1,5 +1,18 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
+import * as express from 'express';
+
+const cors = require('cors');
+const app = express();
+
+
+admin.initializeApp();
+
+app.use(cors({origin: true}));
+
+const firestore = admin.firestore();
+const storage = admin.storage();
+
 const mkdirp = require('mkdirp');
 const spawn = require('child-process-promise').spawn;
 const path = require('path');
@@ -8,22 +21,15 @@ const fs = require('fs');
 //const gcs = require('@google-cloud/storage')();
 const sharp = require('sharp');
 
-admin.initializeApp();
-
-
-import * as express from 'express';
-const app = express();
-
-const cors = require('cors');
-app.use(cors({origin: true}));
-
-const firestore = admin.firestore();
-//const auth = admin.auth();
-const storage = admin.storage();
-
 import {Business, BusinessLocation} from './util/business';
 import {Customer} from './util/customer';
 import { Queue, Party, QueueInfo } from './util/queue';
+
+
+/**
+ * ALL NATIVE JS OBJECTS MUST BE CONVERTED TO STRINGS PRIOR TO
+ * SENDING, AND CONVERTED BACK TO NATIVE JS OBJECTS UPON RETREIVAL
+ */
 
 /**
  * GET /api/businesses
