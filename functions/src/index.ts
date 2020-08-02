@@ -490,7 +490,7 @@ app.get('/api/queues/info', async (req, res) => {
         const data = doc.data();
         result = {
           length: data.parties.length,
-          longestWaitTime: data.parties[0].length ? diff_minutes(data.parties[0].checkIn.toDate(), new Date()) : -1,
+          longestWaitTime: data.parties.length ? diff_minutes(data.parties[0].checkIn.toDate(), new Date()) : -1,
           open: data.open,
         }
       } else {
