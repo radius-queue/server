@@ -25,7 +25,6 @@ import {Business, BusinessLocation} from './util/business';
 import {Customer} from './util/customer';
 import { Queue, Party, QueueInfo } from './util/queue';
 
-
 /**
  * ALL NATIVE JS OBJECTS MUST BE CONVERTED TO STRINGS PRIOR TO
  * SENDING, AND CONVERTED BACK TO NATIVE JS OBJECTS UPON RETREIVAL
@@ -54,8 +53,9 @@ app.get('/api/businesses', async (req, res) => {
   let uid : string | undefined;
   try {
     uid = req.query.uid as string;
-  } catch {
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   let result : Business | undefined;
@@ -72,14 +72,17 @@ app.get('/api/businesses', async (req, res) => {
         type: data.type,
         locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(e))
       }
-    } else {
-      res.sendStatus(404);
     }
-  }).catch(function() {
+  }).catch(function(error) {
     res.sendStatus(500);
   });
 
- result!.uid = uid!;
+  if (!result) {
+    res.sendStatus(404);
+    return;
+  }
+
+  result!.uid = uid!;
 
   res.status(200).json(result!);
 });
@@ -112,14 +115,16 @@ app.post('/api/businesses', async (req, res) => {
       ...req.body.business,
       locations: [businessLocationToFirebase(req.body.business.locations[0])],
     };
-  } catch {
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   try {
     await firestore.collection('businesses').doc(business!.uid).set(business!);
-  } catch {
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -146,9 +151,10 @@ app.post('/api/businesses', async (req, res) => {
 app.get('/api/queues', async (req, res) => {
   let uid : string | undefined;
   try {
-    uid = req.query.string as string;
-  } catch {
+    uid = req.query.uid as string;
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   let ret : Queue | undefined;
@@ -162,12 +168,15 @@ app.get('/api/queues', async (req, res) => {
           open: data.open,
           parties: data.parties.map((party: any)=> Party.fromFirebase(party)),
         }
-      } else {
-        res.sendStatus(404);
       }
     }).catch(function(error) {
       res.sendStatus(500);
     });
+
+  if (!ret) {
+    res.sendStatus(404);
+    return;
+  }
 
   ret!.uid = uid!;
 
@@ -209,12 +218,14 @@ app.post('/api/queues', async (req, res) => {
     };
   } catch (error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   try {
     await firestore.collection('queues').doc(queue.uid).set(data!);
   } catch (error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -249,6 +260,7 @@ app.post('/api/queues/new', async (req, res) => {
     uid = req.query.uid as string;
   } catch (error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   const newQueue : Queue= {
@@ -262,6 +274,7 @@ app.post('/api/queues/new', async (req, res) => {
     await firestore.collection('queues').doc(newQueue.uid).set(newQueue);
   } catch (error) {
     res.status(500).send(error.message);
+    return;
   }
 
   res.status(201).json(newQueue);
@@ -291,8 +304,9 @@ app.get('/api/businesses/locations', async (req, res) => {
   let uid : string | undefined;
   try {
     uid = req.query.uid as string;
-  } catch {
+  } catch (error){
     res.status(400).send('Malformed Request');
+    return;
   }
 
   let ret: BusinessLocation | undefined;
@@ -301,12 +315,15 @@ app.get('/api/businesses/locations', async (req, res) => {
       if (doc.exists) {
         const data = doc.data().locations[0];
         ret =  BusinessLocation.fromFirebase(data);
-      } else {
-        res.sendStatus(404);
       }
     }).catch(() => {
       res.sendStatus(500);
     });
+
+  if (!ret) {
+    res.sendStatus(404);
+    return;
+  }
 
   res.status(200).json(ret!);
 });
@@ -336,6 +353,7 @@ app.get('/api/customers', async (req, res) => {
     uid = req.query.uid as string;
   } catch (error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   let ret : Customer | undefined;
@@ -353,12 +371,15 @@ app.get('/api/customers', async (req, res) => {
           favorites: data.favorites,
           recents: data.recents,
         };
-      } else {
-        res.sendStatus(404);
       }
     }).catch(() => {
       res.sendStatus(500);
     });
+
+  if (!ret) {
+    res.sendStatus(404);
+    return;
+  }
 
   ret!.uid = uid!;
 
@@ -388,14 +409,16 @@ app.post('/api/customers', async (req, res) => {
   let customer : Customer | undefined;
   try {
     customer = req.body.customer;
-  } catch {
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   try {
     await firestore.collection('customer').doc(customer!.uid).set(customer!);
-  } catch {
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -441,14 +464,16 @@ app.post('/api/customers/new', async (req, res) => {
       recents: [],
       favorites: [],
     };
-  } catch {
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   try {
     await firestore.collection('customer').doc(customer.uid).set(result!);
-  } catch {
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
   res.status(201).json(result!);
@@ -478,8 +503,9 @@ app.get('/api/queues/info', async (req, res) => {
   let uid : string | undefined;
   try {
     uid = req.query.uid as string;
-  } catch {
+  } catch(error) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
   let result : QueueInfo | undefined;
@@ -493,12 +519,15 @@ app.get('/api/queues/info', async (req, res) => {
           longestWaitTime: data.parties.length ? diff_minutes(data.parties[0].checkIn.toDate(), new Date()) : -1,
           open: data.open,
         }
-      } else {
-        res.sendStatus(404);
       }
     }).catch(() => {
       res.sendStatus(500);
     });
+  
+  if(!result) {
+    res.sendStatus(404);
+    return;
+  }
 
   res.status(200).json(result!);
 })
