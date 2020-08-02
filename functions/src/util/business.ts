@@ -7,7 +7,6 @@ export class Business {
   lastName:string;
   email: string;
   locations: BusinessLocation[];
-  // password : string;
   uid : string;
   type : string;
 
@@ -30,7 +29,6 @@ export class Business {
     this.uid = uid;
     this.locations = locations;
     this.type = type;
-    // this.uid = uid || "";
   }
 }
 
@@ -99,26 +97,6 @@ export class BusinessLocation {
   }
 
   /**
-  *
-  * @param {BusinessLocation} location js object
-  * @return {object} equivalent firebase location object
-  */
-  /*static toFirebase(location: BusinessLocation): any {
-    return {
-      name: location.name,
-      address: location.address,
-      phoneNumber: location.phoneNumber,
-      hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
-      coordinates: new firestore.GeoPoint(
-          location.coordinates[0],
-          location.coordinates[1],
-      ),
-      queues: location.queues,
-      geoFenceRadius: location.geoFenceRadius,
-    };
-  };*/
-
-  /**
    *
    * @param hours
    */
@@ -140,36 +118,11 @@ export class BusinessLocation {
     const ret: [string | null, string | null][] = [];
     for (let i = 0; i < DATE_INDEX.size; i++) {
       const day = hours[(DATE_INDEX.get(i))!];
-      ret.push([!day[0] ? null : day[0], !day[1] ? null : day[1]]);
+      ret.push([day[0], day[1]]);
     }
     return ret;
   }
 }
-
-/*export const businessConverter = {
-  toFirestore: function(b: Business) {
-    return {
-      name: b.name,
-      firstName: b.firstName,
-      lastName: b.lastName,
-      email: b.email,
-      type: b.type,
-      locations: b.locations.map((e) => BusinessLocation.toFirebase(e)),
-    };
-  },
-  fromFirestore: function(snapshot: any, options: any) {
-    const data = snapshot.data(options);
-    return new Business(
-        data.name,
-        data.firstName,
-        data.lastName,
-        data.email,
-        '', // uid
-        data.type,
-        data.locations.map((e: any) => BusinessLocation.fromFirebase(e)),
-    );
-  },
-};*/
 
 export function getHoursArray(input: [string, string][]) {
   const result : [Date | null, Date | null][] = [];
@@ -198,13 +151,3 @@ const DATE_INDEX: Map<number, string> = new Map<number, string>([
   [5, 'Friday'],
   [6, 'Saturday'],
 ]);
-
-export const DAYS : string[] = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];

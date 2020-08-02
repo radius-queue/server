@@ -35,30 +35,3 @@ export class Customer {
     this.recents= recents;
   }
 }
-
-export const customerConverter = {
-  toFirestore: function(c: Customer) {
-    return {
-      firstName: c.firstName,
-      lastName: c.lastName,
-      email: c.email,
-      phoneNumber: c.phoneNumber,
-      currentQueue: c.currentQueue,
-      favorites: c.favorites,
-      recents: c.recents,
-    };
-  },
-  fromFirestore: function(snapshot: any, options: any) {
-    const data = snapshot.data(options);
-    return new Customer(
-        data.firstName,
-        data.lastName,
-        data.email,
-        data.phoneNumber,
-        '', // uid
-        data.currentQueue,
-        data.favorites,
-        data.recents,
-    );
-  },
-};

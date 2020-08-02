@@ -113,47 +113,7 @@ export class Party {
         ];
     return new Party(...partyPrams);
   }
-
-  /**
-    * @param party
-    
-  static toFirebase(party: Party): any {
-    return {
-      firstName: party.firstName,
-      size: party.size,
-      phoneNumber: party.phoneNumber,
-      quote: party.quote,
-      checkIn: firestore.Timestamp.fromDate(new Date(party.checkIn)),
-      lastName: party.lastName,
-      messages: this.messageToFB(party.messages),
-    };
-  }
-  */
 }
-
-export const Q_COLUMNS : string[] = ['#', 'Name', 'Party Size', 'Quoted Time'];
-
-/*export const queueConverter = {
-  toFirestore: function(q: Queue) {
-    return {
-      name: q.name,
-      parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firestore.Timestamp.fromDate(q.end),
-      open: q.open,
-    };
-  },
-  fromFirestore: function(snapshot: any, options: any) {
-    const data = snapshot.data(options);
-    return new Queue(
-        data.name,
-        data.end.toDate(),
-        '',
-        data.open,
-        data.parties.map((party: any)=> Party.fromFirebase(party)),
-    );
-  },
-};
-*/
 
 /**
  * This class represents a queue
@@ -163,24 +123,3 @@ export interface QueueInfo {
   longestWaitTime: number;
   open: boolean;
 }
-
-/*export const queueInfoConverter = {
-  toFirestore: function(q: Queue) {
-    return {
-      name: q.name,
-      parties: q.parties.map((e) => Party.toFirebase(e)),
-      end: firestore.Timestamp.fromDate(q.end),
-      open: q.open,
-    };
-  },
-  fromFirestore: function(snapshot: any, options: any) {
-    // const data = snapshot.data(options);
-    return ;
-  },
-};
-
-export function diff_minutes(dt2: Date, dt1: Date) {
-  let diff =(dt2.getTime() - dt1.getTime()) / 1000;
-  diff /= 60;
-  return Math.abs(Math.round(diff));
-}*/
