@@ -548,6 +548,7 @@ function businessLocationToFirebase(location: any) {
     ),
     queues: location.queues,
     geoFenceRadius: location.geoFenceRadius,
+    images: location.images,
   };
 }
 
