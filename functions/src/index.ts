@@ -25,7 +25,6 @@ import {Business, BusinessLocation} from './util/business';
 import {Customer} from './util/customer';
 import { Queue, Party, QueueInfo } from './util/queue';
 
-
 /**
  * ALL NATIVE JS OBJECTS MUST BE CONVERTED TO STRINGS PRIOR TO
  * SENDING, AND CONVERTED BACK TO NATIVE JS OBJECTS UPON RETREIVAL
@@ -51,15 +50,15 @@ import { Queue, Party, QueueInfo } from './util/queue';
  *  500 -> Error in accessing firebase
  */
 app.get('/api/businesses', async (req, res) => {
-  let uid : string | undefined;
-  try {
-    uid = req.query.uid as string;
-  } catch {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const uid : string = req.query.uid as string;
+
   let result : Business | undefined;
-  await firestore.collection('businesses').doc(uid!)
+  await firestore.collection('businesses').doc(uid)
   .get().then(function(doc: admin.firestore.DocumentData) {
     if (doc.exists) {
       const data = doc.data();
@@ -75,13 +74,17 @@ app.get('/api/businesses', async (req, res) => {
     } else {
       res.sendStatus(404);
     }
-  }).catch(function() {
+  }).catch(function(error) {
     res.sendStatus(500);
   });
 
- result!.uid = uid!;
+  if (!result) {
+    return;
+  }
 
-  res.status(200).json(result!);
+  result.uid = uid;
+
+  res.status(200).json(result);
 });
 
 
@@ -105,21 +108,21 @@ app.get('/api/businesses', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/businesses', async (req, res) => {
-
-  let business : Business | undefined;
-  try {
-    business = {
-      ...req.body.business,
-      locations: [businessLocationToFirebase(req.body.business.locations[0])],
-    };
-  } catch {
+  if (!req.body.business) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const business : Business = {
+    ...req.body.business,
+    locations: [businessLocationToFirebase(req.body.business.locations[0])],
+  };
+
   try {
-    await firestore.collection('businesses').doc(business!.uid).set(business!);
-  } catch {
+    await firestore.collection('businesses').doc(business.uid).set(business);
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -144,15 +147,15 @@ app.post('/api/businesses', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.get('/api/queues', async (req, res) => {
-  let uid : string | undefined;
-  try {
-    uid = req.query.string as string;
-  } catch {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const uid : string = req.query.uid as string;
+
   let ret : Queue | undefined;
-  await firestore.collection('queues').doc(uid!)
+  await firestore.collection('queues').doc(uid)
     .get().then(function(doc: admin.firestore.DocumentData) {
       if (doc.exists) {
         const data = doc.data();
@@ -169,9 +172,13 @@ app.get('/api/queues', async (req, res) => {
       res.sendStatus(500);
     });
 
-  ret!.uid = uid!;
+  if (!ret) {
+    return;
+  }
 
-  res.status(200).json(ret!);
+  ret.uid = uid;
+
+  res.status(200).json(ret);
 
 });
 
@@ -196,25 +203,20 @@ app.get('/api/queues', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/queues', async (req, res) => {
-
-  let  queue : any;
-  let data: Queue | undefined;
-  try {
-    queue = req.body.queue;
-    data = {
-      name: queue.name,
-      parties: queue.parties.map((e: any) => partyToFirebase(e)),
-      open: queue.open,
-      uid: queue.uid,
-    };
-  } catch (error) {
+  if (!req.body.queue || !req.body.queue.name ||
+      !req.body.queue.parties || !req.body.queue.open) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const queue : any = req.body.queue;
+  queue.parties = queue.parties.map((e: any) => partyToFirebase(e));
+
   try {
-    await firestore.collection('queues').doc(queue.uid).set(data!);
+    await firestore.collection('queues').doc(queue.uid).set(queue);
   } catch (error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -241,19 +243,17 @@ app.post('/api/queues', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/queues/new', async (req, res) => {
-  let name : string | undefined;
-  let uid : string | undefined;
-
-  try {
-    name = req.query.name as string;
-    uid = req.query.uid as string;
-  } catch (error) {
+  if (!req.query.name || !req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const name : string = req.query.name as string;
+  const uid : string = req.query.uid as string;
+
   const newQueue : Queue= {
-    name: name!,
-    uid: uid!,
+    name: name,
+    uid: uid,
     open: false,
     parties: [],
   };
@@ -262,6 +262,7 @@ app.post('/api/queues/new', async (req, res) => {
     await firestore.collection('queues').doc(newQueue.uid).set(newQueue);
   } catch (error) {
     res.status(500).send(error.message);
+    return;
   }
 
   res.status(201).json(newQueue);
@@ -288,15 +289,15 @@ app.post('/api/queues/new', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.get('/api/businesses/locations', async (req, res) => {
-  let uid : string | undefined;
-  try {
-    uid = req.query.uid as string;
-  } catch {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const uid : string= req.query.uid as string;
+
   let ret: BusinessLocation | undefined;
-  await firestore.collection('businesses').doc(uid!)
+  await firestore.collection('businesses').doc(uid)
     .get().then(function(doc: admin.firestore.DocumentData) {
       if (doc.exists) {
         const data = doc.data().locations[0];
@@ -308,7 +309,11 @@ app.get('/api/businesses/locations', async (req, res) => {
       res.sendStatus(500);
     });
 
-  res.status(200).json(ret!);
+  if (!ret) {
+    return;
+  }
+
+  res.status(200).json(ret);
 });
 
 /**
@@ -331,15 +336,15 @@ app.get('/api/businesses/locations', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.get('/api/customers', async (req, res) => {
-  let uid: string | undefined;
-  try {
-    uid = req.query.uid as string;
-  } catch (error) {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const uid: string = req.query.uid as string;
+
   let ret : Customer | undefined;
-  await firestore.collection('customer').doc(uid!)
+  await firestore.collection('customer').doc(uid)
     .get().then(function(doc: FirebaseFirestore.DocumentData) {
       if (doc.exists) {
         const data = doc.data();
@@ -356,13 +361,17 @@ app.get('/api/customers', async (req, res) => {
       } else {
         res.sendStatus(404);
       }
-    }).catch(() => {
+    }).catch((error) => {
       res.sendStatus(500);
     });
 
-  ret!.uid = uid!;
+  if (!ret) {
+    return;
+  }
 
-  res.status(200).json(ret!);
+  ret.uid = uid;
+
+  res.status(200).json(ret);
 });
 
 /**
@@ -385,17 +394,18 @@ app.get('/api/customers', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/customers', async (req, res) => {
-  let customer : Customer | undefined;
-  try {
-    customer = req.body.customer;
-  } catch {
+  if (!req.body.customer) {
     res.status(400).send('Malformed Request');
+    return;
   }
 
+  const {customer} = req.body;
+
   try {
-    await firestore.collection('customer').doc(customer!.uid).set(customer!);
-  } catch {
+    await firestore.collection('customer').doc(customer.uid).set(customer);
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
   res.sendStatus(201);
@@ -426,32 +436,34 @@ app.post('/api/customers', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/customers/new', async (req, res) => {
-  let customer : any;
-  let result : Customer | undefined;
-
-  try {
-    customer = req.body.customer;
-    result = {
-      firstName: customer.firstName,
-      lastName: customer.lastName,
-      email: customer.email,
-      phoneNumber: customer.phoneNumber,
-      uid: customer.uid,
-      currentQueue: '',
-      recents: [],
-      favorites: [],
-    };
-  } catch {
-    res.status(400).send('Malformed Request');
+  if (!req.body.customer || !req.body.customer.firstName ||
+    !req.body.customer.lastName || !req.body.customer.email ||
+    !req.body.customer.phoneNumber || !req.body.customer.uid
+    ) {
+      res.status(400).send('Malformed Request');
+      return;
   }
+  const { customer } = req.body;
+
+  const result : Customer = {
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    email: customer.email,
+    phoneNumber: customer.phoneNumber,
+    uid: customer.uid,
+    currentQueue: '',
+    recents: [],
+    favorites: [],
+  };
 
   try {
-    await firestore.collection('customer').doc(customer.uid).set(result!);
-  } catch {
+    await firestore.collection('customer').doc(customer.uid).set(result);
+  } catch(error) {
     res.sendStatus(500);
+    return;
   }
 
-  res.status(201).json(result!);
+  res.status(201).json(result);
 
 })
 
@@ -475,22 +487,20 @@ app.post('/api/customers/new', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.get('/api/queues/info', async (req, res) => {
-  let uid : string | undefined;
-  try {
-    uid = req.query.uid as string;
-  } catch {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
+    return;
   }
+  const uid : string = req.query.uid as string;
 
   let result : QueueInfo | undefined;
-
-  await firestore.collection('queues').doc(uid!)
+  await firestore.collection('queues').doc(uid)
     .get().then(function(doc: FirebaseFirestore.DocumentData) {
       if (doc.exists) {
         const data = doc.data();
         result = {
           length: data.parties.length,
-          longestWaitTime: diff_minutes(data.parties[0].checkIn.toDate(), new Date()),
+          longestWaitTime: data.parties.length ? diff_minutes(new Date(data.parties[0].checkIn), new Date()) : -1,
           open: data.open,
         }
       } else {
@@ -499,8 +509,12 @@ app.get('/api/queues/info', async (req, res) => {
     }).catch(() => {
       res.sendStatus(500);
     });
+  
+  if(!result) {
+    return;
+  }
 
-  res.status(200).json(result!);
+  res.status(200).json(result);
 })
 
 exports.widgets = functions.https.onRequest(app);
