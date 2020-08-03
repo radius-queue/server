@@ -204,7 +204,7 @@ app.get('/api/queues', async (req, res) => {
  */
 app.post('/api/queues', async (req, res) => {
   if (!req.body.queue || !req.body.queue.name ||
-      !req.body.queue.parties || !req.body.queue.open) {
+      !req.body.queue.parties) {
     res.status(400).send('Malformed Request');
     return;
   }
