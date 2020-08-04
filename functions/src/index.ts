@@ -25,10 +25,23 @@ import {Business, BusinessLocation} from './util/business';
 import {Customer} from './util/customer';
 import { Queue, Party, QueueInfo } from './util/queue';
 
-/**
- * ALL NATIVE JS OBJECTS MUST BE CONVERTED TO STRINGS PRIOR TO
- * SENDING, AND CONVERTED BACK TO NATIVE JS OBJECTS UPON RETREIVAL
- */
+const authentication = async (req: express.Request, res: express.Response, next: () => any) => {
+  if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+    res.status(403).send('Unauthorized');
+    return;
+  }
+  const idToken : string = req.headers.authorization.split('Bearer ')[1];
+  try {
+    await admin.auth().verifyIdToken(idToken);
+    next();
+    return;
+  } catch(error) {
+    res.status(403).send('Unauthorized');
+    return;
+  }
+}
+
+app.use(authentication);
 
 /**
  * GET /api/businesses
