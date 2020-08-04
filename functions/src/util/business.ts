@@ -1,6 +1,6 @@
 /**
  * This class represents a Business
- */ 
+ */
 export class Business {
   name: string;
   firstName: string;
@@ -58,7 +58,7 @@ export class BusinessLocation {
    * @param {number} geoFenceRadius Optional radius around business location
    *    (in meters) that a customer is allowed to enter queue, Default value
    *    of -1
-   * @param {string[]} images array of string urls that correspond to uploaded images from the business 
+   * @param {string[]} images array of string urls that correspond to uploaded images from the business
    */
   constructor(name: string, address: string, phoneNumber: string, hours: [string | null, string | null][],
       coordinates: number[], queues: string[] = [],
@@ -91,7 +91,7 @@ export class BusinessLocation {
          location.coordinates.longitude],
        location.queues,
        location.geoFenceRadius,
-       [],
+       location.images,
      ];
     return new BusinessLocation(...locPrams);
   }

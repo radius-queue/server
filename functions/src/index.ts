@@ -509,7 +509,7 @@ app.get('/api/queues/info', async (req, res) => {
     }).catch(() => {
       res.sendStatus(500);
     });
-  
+
   if(!result) {
     return;
   }
@@ -617,7 +617,7 @@ exports.imageToJPG = functions.storage.object().onFinalize(async (object) => {
 
   // Create Sharp pipeline for resizing the image and use pipe to read from bucket read stream
   const pipeline = sharp();
-  pipeline.resize(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT).max().pipe(thumbnailUploadStream);
+  pipeline.resize(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT, {fit: 'contain'}).pipe(thumbnailUploadStream);
 
   bucket.file(tempLocalJPEGFile).createReadStream().pipe(pipeline);
 
