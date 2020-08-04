@@ -269,7 +269,7 @@ app.post('/api/queues/new', async (req, res) => {
 });
 
 /**
- * GET /api/businesses/locations
+ * GET /api/businesses/:uid/location
  * Retreival of all business information for a specific business
  * using the Radius service
  *
@@ -288,13 +288,13 @@ app.post('/api/queues/new', async (req, res) => {
  *  404 -> No business found with that uid
  *  500 -> Error in accessing firebase
  */
-app.get('/api/businesses/locations', async (req, res) => {
-  if (!req.query.uid) {
+app.get('/api/businesses/:uid/location', async (req, res) => {
+  if (!req.params.uid) {
     res.status(400).send('Malformed Request');
     return;
   }
 
-  const uid : string= req.query.uid as string;
+  const uid : string= req.params.uid;
 
   let ret: BusinessLocation | undefined;
   await firestore.collection('businesses').doc(uid)
@@ -511,6 +511,144 @@ app.get('/api/queues/info', async (req, res) => {
     });
   
   if(!result) {
+    return;
+  }
+
+  res.status(200).json(result);
+});
+
+/**
+ * POST /api/queues/:uid
+ * Appends a party to the back of a queue and returns the
+ * queue object.
+ * 
+ * Path Parameters:
+ *  uid: the id of the queue
+ * 
+ * Body Content:
+ *  party: the party to be added to the queue
+ * 
+ * Response Result:
+ *  The queue object with the given party appended to it.
+ * 
+ * Error Cases:
+ *  400 -> no uid in the path and no party property in the body
+ *  404 -> no queue with given uid
+ *  500 -> problem connecting to firebase
+ */
+app.post('/api/queues/:uid', async (req, res) => {
+  if (!req.params.uid || !req.body.party) {
+    res.status(400).send('Malformed Request');
+    return;
+  }
+  const { party } = req.body;
+  const uid = req.params.uid;
+
+  let ret : Queue | undefined;
+  await firestore.collection('queues').doc(uid)
+    .get().then(function(doc: admin.firestore.DocumentData) {
+      if (doc.exists) {
+        const data = doc.data();
+        ret = {
+          name: data.name,
+          uid: '',
+          open: data.open,
+          parties: data.parties,
+        }
+      } else {
+        res.sendStatus(404);
+      }
+    }).catch(function(error) {
+      res.status(500).send('Pulling');
+    });
+  
+  if (!ret) {
+    return;
+  }
+
+  ret.uid = uid; 
+
+  ret.parties.push(party);
+
+  try {
+    await firestore.collection('queues').doc(uid).set(ret);
+  } catch(error) {
+    res.status(500).send(error.message);
+    return;
+  }
+
+  res.status(201).json(ret);
+});
+
+/**
+ * GET /api/business/locations/all
+ * Retreival of all business location objects on file
+ *
+ * Query params:
+ *  None
+ * 
+ * Body Content:
+ *  None
+ *
+ * Response Result:
+ *  Array of BusinessLocation objects.
+ *
+ * Error Cases:
+ *  500 -> Error in accessing firebase
+ */
+app.get('/api/businesses/locations/all', async (req, res) => {
+  const businesses = await firestore.collection('businesses').get()
+    .then((querySnap : admin.firestore.QuerySnapshot) => {
+      return querySnap.docs.map((doc: admin.firestore.DocumentData) => {
+        const data = doc.data();
+        return BusinessLocation.fromFirebase(data.locations[0]);
+      })
+    }).catch(function(error) {
+      res.sendStatus(500);
+    });
+
+  if (!businesses) {
+    return;
+  }
+
+  res.status(200).json(businesses);
+});
+
+/**
+ * GET /api/business/locations
+ * Retreival of at most 10 business locations who's uid's are in the given
+ * array
+ *
+ * Query params:
+ *  None
+ * 
+ * Body Content:
+ *  an object with a single property locations that is an array
+ *  of string uids.
+ *
+ * Response Result:
+ *  Array of BusinessLocation objects.
+ *
+ * Error Cases:
+ *  500 -> Error in accessing firebase
+ */
+app.get('/api/businesses/locations', async (req, res) => {
+  if (!req.query.locations) {
+    res.status(400).send('Malformed Request');
+    return;
+  }
+  const locations = JSON.parse(req.query.locations as string);
+  const result = await firestore.collection('businesses').where('uid', 'in', locations).get()
+    .then((snapshot: admin.firestore.QuerySnapshot) => {
+        return snapshot.docs.map((doc : admin.firestore.DocumentData) => {
+          const data = doc.data();
+          return BusinessLocation.fromFirebase(data.locations[0])
+      })
+    }).catch(function(error) {
+      res.sendStatus(500);
+    });
+
+  if (!result) {
     return;
   }
 
