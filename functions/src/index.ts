@@ -11,15 +11,15 @@ admin.initializeApp();
 app.use(cors({origin: true}));
 
 const firestore = admin.firestore();
-const storage = admin.storage();
+// const storage = admin.storage();
 
-const mkdirp = require('mkdirp');
-const spawn = require('child-process-promise').spawn;
+// const mkdirp = require('mkdirp');
+
 const path = require('path');
 const os = require('os');
-const fs = require('fs');
-//const gcs = require('@google-cloud/storage')();
+const fs = require('fs-extra');
 const sharp = require('sharp');
+import { Storage } from '@google-cloud/storage';
 
 import {Business, BusinessLocation} from './util/business';
 import {Customer} from './util/customer';
@@ -522,7 +522,7 @@ app.get('/api/queues/info', async (req, res) => {
     }).catch(() => {
       res.sendStatus(500);
     });
-  
+
   if(!result) {
     return;
   }
@@ -534,16 +534,16 @@ app.get('/api/queues/info', async (req, res) => {
  * POST /api/queues/:uid
  * Appends a party to the back of a queue and returns the
  * queue object.
- * 
+ *
  * Path Parameters:
  *  uid: the id of the queue
- * 
+ *
  * Body Content:
  *  party: the party to be added to the queue
- * 
+ *
  * Response Result:
  *  The queue object with the given party appended to it.
- * 
+ *
  * Error Cases:
  *  400 -> no uid in the path and no party property in the body
  *  404 -> no queue with given uid
@@ -574,12 +574,12 @@ app.post('/api/queues/:uid', async (req, res) => {
     }).catch(function(error) {
       res.status(500).send('Pulling');
     });
-  
+
   if (!ret) {
     return;
   }
 
-  ret.uid = uid; 
+  ret.uid = uid;
 
   ret.parties.push(party);
 
@@ -599,7 +599,7 @@ app.post('/api/queues/:uid', async (req, res) => {
  *
  * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  None
  *
@@ -634,7 +634,7 @@ app.get('/api/businesses/locations/all', async (req, res) => {
  *
  * Query params:
  *  None
- * 
+ *
  * Body Content:
  *  an object with a single property locations that is an array
  *  of string uids.
@@ -723,70 +723,133 @@ function diff_minutes(dt2: Date, dt1: Date) {
   return Math.abs(Math.round(diff));
 }
 
-const JPEG_EXTENSION = '.jpg';
-const IMAGE_MAX_WIDTH = 1080;
-const IMAGE_MAX_HEIGHT = 1350;
+// const JPEG_EXTENSION = '.jpg';
+// const IMAGE_MAX_WIDTH = 1080;
+// const IMAGE_MAX_HEIGHT = 1350;
 
-/**
- * When an image is uploaded in the Storage bucket it is converted to JPEG,
- * and resized
- */
-exports.imageToJPG = functions.storage.object().onFinalize(async (object) => {
-  const filePath = object.name; // File path in the bucket.
-  const baseFileName = path.basename(filePath, path.extname(filePath)); // file name without extension
-  const fileDir = path.dirname(filePath); // Directory of the file
-  const JPEGFilePath = path.normalize(path.format({dir: fileDir, name: baseFileName, ext: JPEG_EXTENSION})); // final path
-  const tempLocalFile = path.join(os.tmpdir(), filePath); // Copy of file in temp
-  const tempLocalDir = path.dirname(tempLocalFile); // temp directory
-  const tempLocalJPEGFile = path.join(os.tmpdir(), JPEGFilePath); // JPEG version of file in temp
-  const contentType = object.contentType; // File content type.
-  const metadata = {
-    contentType: contentType,
-  };
+// /**
+//  * When an image is uploaded in the Storage bucket it is converted to JPEG,
+//  * and resized
+//  */
+// exports.imageToJPG = functions.storage.object().onFinalize(async (object) => {
+//   const filePath = object.name; // File path in the bucket.
+//   const baseFileName = path.basename(filePath, path.extname(filePath)); // file name without extension
+//   const fileDir = path.dirname(filePath); // Directory of the file
+//   const JPEGFilePath = path.normalize(path.format({dir: fileDir, name: baseFileName, ext: JPEG_EXTENSION})); // final path
+//   const tempLocalFile = path.join(os.tmpdir(), filePath); // Copy of file in temp
+//   const tempLocalDir = path.dirname(tempLocalFile); // temp directory
+//   const tempLocalJPEGFile = path.join(os.tmpdir(), JPEGFilePath); // JPEG version of file in temp
+//   const contentType = object.contentType; // File content type.
+//   const metadata = {
+//     contentType: contentType,
+//   };
 
-  // Exit if this is triggered on a file that is not an image.
-  if (!contentType!.startsWith('image/')) {
-    console.log('This is not an image.');
-    return null;
-  }
+//   try {
+//     // Exit if this is triggered on a file that is not an image.
+//     if (!contentType!.startsWith('image/')) {
+//       console.log('This is not an image.');
+//       return null;
+//     }
 
-  const bucket = storage.bucket(object.bucket);
-  // Create the temp directory where the storage file will be downloaded.
-  await mkdirp(tempLocalDir);
-  // Download file from bucket.
-  await bucket.file(filePath!).download({destination: tempLocalFile});
-  //console.log('The file has been downloaded to', tempLocalFile);
+//     const bucket = storage.bucket(object.bucket);
+//     // Create the temp directory where the storage file will be downloaded.
+//     await mkdirp(tempLocalDir);
+//     // Download file from bucket.
+//     await bucket.file(filePath!).download({destination: tempLocalFile});
+//     console.log('The file has been downloaded to', tempLocalFile);
 
-  // if the image is not JPEG.
-  if (!object.contentType!.startsWith('image/jpeg')) {
-    // Convert the image to JPEG using ImageMagick.
-    await spawn('convert', [tempLocalFile, tempLocalJPEGFile]);
-    //console.log('JPEG image created at', tempLocalJPEGFile);
-  }
+//     // if the image is not JPEG.
+//     if (!object.contentType!.startsWith('image/jpeg')) {
+//       // Convert the image to JPEG using ImageMagick.
+//       await spawn('convert', [tempLocalFile, tempLocalJPEGFile]);
+//       console.log('JPEG image created at', tempLocalJPEGFile);
+//     }
 
-  const thumbnailUploadStream = bucket.file(JPEGFilePath).createWriteStream({metadata});
+//     const thumbnailUploadStream = bucket.file(JPEGFilePath).createWriteStream({metadata});
 
-  // Create Sharp pipeline for resizing the image and use pipe to read from bucket read stream
-  const pipeline = sharp();
-  pipeline.resize(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT).max().pipe(thumbnailUploadStream);
+//     // Create Sharp pipeline for resizing the image and use pipe to read from bucket read stream
+//     const pipeline = sharp();
+//     pipeline.resize(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT, {fit: 'contain'}).pipe(thumbnailUploadStream);
 
-  bucket.file(tempLocalJPEGFile).createReadStream().pipe(pipeline);
+//     bucket.file(tempLocalJPEGFile).createReadStream().pipe(pipeline);
 
-  const resizeMessage = await new Promise((resolve, reject) =>
-      thumbnailUploadStream.on('finish', resolve).on('error', reject));
-  console.log(resizeMessage);
+//     const resizeMessage = await new Promise((resolve, reject) =>
+//         thumbnailUploadStream.on('finish', resolve).on('error', reject));
+//     console.log(resizeMessage);
 
-  if (resizeMessage === 'finish') {
-    // delete old image
-    bucket.file(filePath!).delete().then(() => {
-      console.log(`Successfully deleted photo ${filePath}`)
-    }).catch(err => {
-        console.log(`Failed to remove photo, error: ${err}`)
+//     if (resizeMessage === 'finish') {
+//       // delete old image
+//       bucket.file(filePath!).delete().then(() => {
+//         console.log(`Successfully deleted photo ${filePath}`)
+//       }).catch(err => {
+//           console.log(`Failed to remove photo, error: ${err}`)
+//       });
+//     }
+
+//     // Once the image has been converted delete the local files to free up disk space.
+//     fs.unlinkSync(tempLocalJPEGFile);
+//     fs.unlinkSync(tempLocalFile);
+
+//   } catch (error) {
+//     console.log(error);
+//   }
+
+//   return null;
+// });
+
+exports.imageToJPG = functions.storage
+  .object()
+  .onFinalize(async object => {
+    const gcs = new Storage();
+    const bucket = gcs.bucket(object.bucket);
+    const filePath = object.name;
+    const fileName = filePath!.split('/').pop();
+
+    const bucketDir = path.dirname(filePath);
+
+    const workingDir = path.join(os.tmpdir(), 'thumbs');
+    console.log('Code updated 2!!');
+    const timestamp = Math.floor(Date.now() / 1000);
+    const tmpFilePath = path.join(workingDir, 'source_' + timestamp + '.jpg');
+
+    // CONTINUE WITH ACTUAL PROCESS
+    if ((fileName!.includes('thumb_') || !object.contentType!.includes('image'))) {
+      console.log('exiting function');
+      return false;
+    } else {
+      console.log('continuing function');
+    }
+
+    // 1. Ensure thumbnail dir exists
+    await fs.ensureDir(workingDir);
+
+    // 2. Download Source File
+    await bucket.file(filePath!).download({
+      destination: tmpFilePath
     });
-  }
 
-  // Once the image has been converted delete the local files to free up disk space.
-  fs.unlinkSync(tempLocalJPEGFile);
-  fs.unlinkSync(tempLocalFile);
-  return null;
-});
+    // 3. Resize the images and define an array of upload promises
+    // - this is the actual place where we can define the thumbnail size.
+    const sizes = [64, 128, 256];
+
+    const uploadPromises = sizes.map(async size => {
+      const thumbName = `thumb_${size}_${fileName}`;
+      const thumbPath = path.join(workingDir, thumbName);
+
+      // Resize source image
+      await sharp(tmpFilePath)
+        .resize(size, null)
+        .toFile(thumbPath);
+
+      // Upload to GCS
+      return bucket.upload(thumbPath, {
+        destination: path.join(bucketDir, thumbName)
+      });
+    });
+
+    // 4. Run the upload operations
+    await Promise.all(uploadPromises);
+
+    // 5. Cleanup remove the tmp/thumbs from the filesystem
+    return fs.remove(workingDir);
+  });
