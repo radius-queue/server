@@ -800,7 +800,8 @@ exports.imageToJPG = functions.storage
     const tmpFilePath = path.join(workingDir, 'source_' + timestamp + '.jpg');
 
     // CONTINUE WITH ACTUAL PROCESS
-    if ((fileName!.includes('thumb_') || !object.contentType!.includes('image'))) {
+    if ((fileName!.includes('thumb_') || !object.contentType!.includes('image') ||
+      fileName!.includes('largeJPG_'))) {
       console.log('exiting function');
       return false;
     } else {
@@ -817,10 +818,10 @@ exports.imageToJPG = functions.storage
 
     // 3. Resize the images and define an array of upload promises
     // - this is the actual place where we can define the thumbnail size.
-    const sizes = [64, 128, 256];
+    const sizes = [128, 1080];
 
     const uploadPromises = sizes.map(async size => {
-      const thumbName = `thumb_${size}_${fileName}`;
+      const thumbName = (size !== 1080) ?`thumb_${size}_${fileName}`:`largeJPG_${fileName}`;
       const thumbPath = path.join(workingDir, thumbName);
 
       // Resize source image
