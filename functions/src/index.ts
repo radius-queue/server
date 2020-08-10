@@ -622,7 +622,7 @@ app.get('/api/businesses/locations/all', async (req, res) => {
         return BusinessLocation.fromFirebase(data.locations[0]);
       })
     }).catch(function(error) {
-      res.sendStatus(500);
+      res.status(500).send(error.message);
     });
 
   if (!businesses) {
