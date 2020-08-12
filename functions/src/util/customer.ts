@@ -4,7 +4,6 @@
 export class Customer {
   firstName: string;
   lastName:string;
-  email: string;
   phoneNumber: string;
   uid: string;
   currentQueue: string;
@@ -22,12 +21,11 @@ export class Customer {
    * @param {string[]} favorites List of favorite businesses' uid
    * @param {string[]} recents List of recently visited businesses'uid
    */
-  constructor(firstName: string, lastName: string, email: string,
+  constructor(firstName: string, lastName: string,
       phoneNumber: string, uid: string, currentQueue: string = '',
       favorites: string[] = [], recents: string[] = []) {
     this.firstName = firstName;
     this.lastName = lastName;
-    this.email = email;
     this.phoneNumber = phoneNumber;
     this.uid = uid;
     this.currentQueue = currentQueue;

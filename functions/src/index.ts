@@ -365,7 +365,6 @@ app.get('/api/customers', async (req, res) => {
         ret = {
           firstName: data.firstName,
           lastName: data.lastName,
-          email: data.email,
           phoneNumber: data.phoneNumber,
           uid: '',
           currentQueue: data.currentQueue,
@@ -430,16 +429,10 @@ app.post('/api/customers', async (req, res) => {
  * Creation of a new customer
  *
  * Query params:
- *  None
+ *  uid: the uid of the new Customer
  *
  * Body Content:
- *  JSON object with the following properties: {
- *   firstName: string,
- *   lastName: string,
- *   email: string,
- *   phoneNumber: string,
- *   uid: string,
- * }
+ *  None
  *
  * Response Result:
  *  JSON object that represents a brand new queue that can
@@ -450,36 +443,30 @@ app.post('/api/customers', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/customers/new', async (req, res) => {
-  if (!req.body.customer || !req.body.customer.firstName ||
-    !req.body.customer.lastName || !req.body.customer.email ||
-    !req.body.customer.phoneNumber || !req.body.customer.uid
-    ) {
+  if (!req.query.uid) {
       res.status(400).send('Malformed Request');
       return;
   }
-  const { customer } = req.body;
 
   const result : Customer = {
-    firstName: customer.firstName,
-    lastName: customer.lastName,
-    email: customer.email,
-    phoneNumber: customer.phoneNumber,
-    uid: customer.uid,
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    uid: req.query.uid as string,
     currentQueue: '',
     recents: [],
     favorites: [],
   };
 
   try {
-    await firestore.collection('customer').doc(customer.uid).set(result);
+    await firestore.collection('customer').doc(result.uid).set(result);
   } catch(error) {
     res.sendStatus(500);
     return;
   }
 
   res.status(201).json(result);
-
-})
+});
 
 /**
  * GET /api/queues/info
