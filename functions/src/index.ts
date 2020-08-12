@@ -614,7 +614,7 @@ app.get('/api/businesses/locations/all', async (req, res) => {
     .then((querySnap : admin.firestore.QuerySnapshot) => {
       return querySnap.docs.map((doc: admin.firestore.DocumentData) => {
         const data = doc.data();
-        return BusinessLocation.fromFirebase(data.locations[0]);
+        return BusinessLocation.fromFirebase(data.type, data.locations[0]);
       })
     }).catch(function(error) {
       res.status(500).send(error.message);
@@ -655,7 +655,7 @@ app.get('/api/businesses/locations', async (req, res) => {
     .then((snapshot: admin.firestore.QuerySnapshot) => {
         return snapshot.docs.map((doc : admin.firestore.DocumentData) => {
           const data = doc.data();
-          return BusinessLocation.fromFirebase(data.locations[0])
+          return BusinessLocation.fromFirebase(data.type, data.locations[0]);
       })
     }).catch(function(error) {
       res.sendStatus(500);
