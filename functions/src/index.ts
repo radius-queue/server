@@ -245,7 +245,6 @@ app.post('/api/queues', async (req, res) => {
  *
  * Query params:
  *  uid: the id of the business whom creation is taking place
- *  name: the name of the queue's business
  *
  * Body Content:
  *  None
@@ -259,7 +258,7 @@ app.post('/api/queues', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/queues/new', async (req, res) => {
-  if (!req.query.name || !req.query.uid) {
+  if (!req.query.uid) {
     res.status(400).send('Malformed Request');
     return;
   }
