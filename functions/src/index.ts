@@ -178,7 +178,6 @@ app.get('/api/queues', async (req, res) => {
       if (doc.exists) {
         const data = doc.data();
         ret = {
-          name: data.name,
           uid: '',
           open: data.open,
           parties: data.parties.map((party: any)=> Party.fromFirebase(party)),
@@ -221,8 +220,7 @@ app.get('/api/queues', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/queues', async (req, res) => {
-  if (!req.body.queue || !req.body.queue.name ||
-      !req.body.queue.parties) {
+  if (!req.body.queue || !req.body.queue.parties) {
     res.status(400).send('Malformed Request');
     return;
   }
@@ -266,11 +264,9 @@ app.post('/api/queues/new', async (req, res) => {
     return;
   }
 
-  const name : string = req.query.name as string;
   const uid : string = req.query.uid as string;
 
   const newQueue : Queue= {
-    name: name,
     uid: uid,
     open: false,
     parties: [],
@@ -486,7 +482,7 @@ app.post('/api/customers/new', async (req, res) => {
 })
 
 /**
- * GET /api/queues
+ * GET /api/queues/info
  * Retreival of queue status information for a specified business
  *
  * Query params:
@@ -568,7 +564,6 @@ app.post('/api/queues/:uid', async (req, res) => {
       if (doc.exists) {
         const data = doc.data();
         ret = {
-          name: data.name,
           uid: '',
           open: data.open,
           parties: data.parties,
