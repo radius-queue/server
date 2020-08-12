@@ -43,7 +43,8 @@ export class BusinessLocation {
   coordinates: number[]; // in decimal degrees (DD).
   queues: string[];
   geoFenceRadius: number; // in meters
-  images: string[]
+  images: string[];
+  type: string;
 
   /**
    * @param {string} name Name of specific location
@@ -61,13 +62,14 @@ export class BusinessLocation {
    * @param {string[]} images array of string urls that correspond to uploaded images from the business
    */
   constructor(name: string, address: string, phoneNumber: string, hours: [string | null, string | null][],
-      coordinates: number[], queues: string[] = [],
-      geoFenceRadius: number = -1, images: string[] = []) {
+      coordinates: number[], type: string, queues: string[] = [],
+      geoFenceRadius: number = -1, images: string[] = [],) {
     this.name = name;
     this.address = address;
     this.phoneNumber = phoneNumber;
     this.hours = hours;
     this.coordinates = coordinates;
+    this.type = type;
     this.queues = queues;
     this.geoFenceRadius = geoFenceRadius;
     this.images = images;
@@ -80,15 +82,16 @@ export class BusinessLocation {
   * @param {object} location firebase location object
   * @return {BusinessLocation} equivalent js object
   */
-  static fromFirebase(location: any): BusinessLocation {
+  static fromFirebase(type: string, location: any): BusinessLocation {
     const locPrams : [string, string, string, [string | null, string | null][], number[],
-     string[], number, string[]] = [
+     string, string[], number, string[]] = [
        location.name,
        location.address,
        location.phoneNumber,
        BusinessLocation.hoursFromFirebase(location.hours),
        [location.coordinates.latitude,
          location.coordinates.longitude],
+       type,
        location.queues,
        location.geoFenceRadius,
        location.images,

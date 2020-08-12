@@ -87,7 +87,7 @@ app.get('/api/businesses', async (req, res) => {
         email: data.email,
         uid: '',
         type: data.type,
-        locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(e))
+        locations: data.locations.map((e: any) => BusinessLocation.fromFirebase(data.type, e))
       }
     } else {
       res.sendStatus(404);
@@ -314,8 +314,8 @@ app.get('/api/businesses/:uid/location', async (req, res) => {
   await firestore.collection('businesses').doc(uid)
     .get().then(function(doc: admin.firestore.DocumentData) {
       if (doc.exists) {
-        const data = doc.data().locations[0];
-        ret =  BusinessLocation.fromFirebase(data);
+        const data = doc.data();
+        ret =  BusinessLocation.fromFirebase(data.type, data.locations[0]);
       } else {
         res.sendStatus(404);
       }
