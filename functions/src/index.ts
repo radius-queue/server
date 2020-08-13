@@ -602,7 +602,7 @@ app.get('/api/businesses/locations/all', async (req, res) => {
         const data = doc.data();
         let ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
         ret.uid = data.uid;
-        return ;
+        return ret;
       })
     }).catch(function(error) {
       res.status(500).send(error.message);
