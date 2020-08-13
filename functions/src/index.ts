@@ -600,7 +600,9 @@ app.get('/api/businesses/locations/all', async (req, res) => {
     .then((querySnap : admin.firestore.QuerySnapshot) => {
       return querySnap.docs.map((doc: admin.firestore.DocumentData) => {
         const data = doc.data();
-        return BusinessLocation.fromFirebase(data.type, data.locations[0]);
+        let ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
+        ret.uid = data.uid;
+        return ;
       })
     }).catch(function(error) {
       res.status(500).send(error.message);

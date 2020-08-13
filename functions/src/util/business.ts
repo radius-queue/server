@@ -45,25 +45,29 @@ export class BusinessLocation {
   geoFenceRadius: number; // in meters
   images: string[];
   type: string;
+  uid: string;
 
   /**
    * @param {string} name Name of specific location
    * @param {string} address Address of location
    * @param {string} phoneNumber phone number of the location
-   * @param {[string | null, string | null][]} hours business hours for queue operation as array
-   *    of Date object pairs.
+   * @param {[string | null, string | null][]} hours business hours for queue
+   *    operation as array of Date object pairs.
    * @param {number[]} coordinates Geographic coordinates of location in
    *    decimal degrees (DD). ex: [41.40338, 2.17403] lat, long
+   * @param {string} type type of establishment
    * @param {string[]} queues Optional array of queue ids associated with
    *    this location, Default value of empty array
    * @param {number} geoFenceRadius Optional radius around business location
    *    (in meters) that a customer is allowed to enter queue, Default value
    *    of -1
-   * @param {string[]} images array of string urls that correspond to uploaded images from the business
+   * @param {string[]} images array of string urls that correspond to uploaded
+   *    images from the business
    */
-  constructor(name: string, address: string, phoneNumber: string, hours: [string | null, string | null][],
+  constructor(name: string, address: string, phoneNumber: string,
+      hours: [string | null, string | null][],
       coordinates: number[], type: string, queues: string[] = [],
-      geoFenceRadius: number = -1, images: string[] = [],) {
+      geoFenceRadius: number = -1, images: string[] = []) {
     this.name = name;
     this.address = address;
     this.phoneNumber = phoneNumber;
@@ -73,6 +77,7 @@ export class BusinessLocation {
     this.queues = queues;
     this.geoFenceRadius = geoFenceRadius;
     this.images = images;
+    this.uid = '';
   }
 
   /* Firebase helper methods */
