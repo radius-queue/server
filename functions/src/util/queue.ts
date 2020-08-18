@@ -31,6 +31,7 @@ export class Party {
   phoneNumber: string;
   quote: number;
   messages: [string, string][];
+  pushToken: string;
   // uid: string;
 
   /**
@@ -46,7 +47,7 @@ export class Party {
    */
   constructor(firstName: string, size: number, phoneNumber: string,
       quote:number, checkIn : string= new Date().toString(), lastName : string = '',
-      messages: [string, string][] = []) {
+      messages: [string, string][] = [], pushToken: string = '') {
     this.firstName = firstName;
     this.lastName = lastName;
     this.checkIn = checkIn;
@@ -54,6 +55,7 @@ export class Party {
     this.phoneNumber = phoneNumber;
     this.quote = quote;
     this.messages = messages;
+    this.pushToken = pushToken;
     // this.uid = uid || "";
   }
 
@@ -99,7 +101,7 @@ export class Party {
   */
   static fromFirebase(party: any): Party {
     const partyPrams : [string, number, string, number, string, string,
-        [string, string][]] = [
+        [string, string][], string] = [
           party.firstName,
           party.size,
           party.phoneNumber,
@@ -107,6 +109,7 @@ export class Party {
           party.checkIn,
           party.lastName,
           this.messageFromFB(party.messages),
+          party.pushToken,
         ];
     return new Party(...partyPrams);
   }

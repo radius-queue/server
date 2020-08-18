@@ -1,10 +1,11 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import * as express from 'express';
+import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 
 const cors = require('cors');
 const app = express();
-
+const expo = new Expo();
 
 admin.initializeApp();
 
@@ -602,7 +603,7 @@ app.get('/api/businesses/locations/all', async (req, res) => {
     .then((querySnap : admin.firestore.QuerySnapshot) => {
       return querySnap.docs.map((doc: admin.firestore.DocumentData) => {
         const data = doc.data();
-        let ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
+        const ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
         ret.uid = data.uid;
         return ret;
       })
@@ -645,7 +646,7 @@ app.get('/api/businesses/locations', async (req, res) => {
     .then((snapshot: admin.firestore.QuerySnapshot) => {
         return snapshot.docs.map((doc : admin.firestore.DocumentData) => {
           const data = doc.data();
-          let ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
+          const ret = BusinessLocation.fromFirebase(data.type, data.locations[0]);
           ret.uid = data.uid;
           return ret;
       })
@@ -660,12 +661,44 @@ app.get('/api/businesses/locations', async (req, res) => {
   res.status(200).json(result);
 });
 
+app.post('api/push', async (req, res) => {
+  if (!req.body.message || !req.body.tokens) {
+    res.sendStatus(400);
+    return;
+  }
+
+  const {tokens, message} = req.body;
+
+  const requests : ExpoPushMessage[] = [];
+  tokens.forEach((token : string) =>  {
+    if (!Expo.isExpoPushToken(token)) {
+      console.error(`Push token ${token} is not valid.`);
+      return;
+    }
+
+    requests.push({
+      to: token,
+      sound: 'default',
+      body: message,
+    });
+  });
+
+  const chunks = expo.chunkPushNotifications(requests);
+  const tickets = [];
+
+  for(const chunk of chunks) {
+    try {
+      const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+      tickets.push(...ticketChunk);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  res.sendStatus(200);
+});
+
 exports.widgets = functions.https.onRequest(app);
-
-// Listeners functions:
-
-// Customer profile init - empty recents etc
-
 
 function partyToFirebase(party: Party): any {
   return {
@@ -676,6 +709,7 @@ function partyToFirebase(party: Party): any {
     checkIn: party.checkIn,
     lastName: party.lastName,
     messages: messageToFB(party.messages),
+    pushToken: party.pushToken,
   };
 }
 
