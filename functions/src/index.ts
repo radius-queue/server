@@ -369,6 +369,7 @@ app.get('/api/customers', async (req, res) => {
           currentQueue: data.currentQueue,
           favorites: data.favorites,
           recents: data.recents,
+          pushToken: data.pushToken,
         };
       } else {
         res.sendStatus(404);
@@ -442,7 +443,7 @@ app.post('/api/customers', async (req, res) => {
  *  500 -> Error in accessing firebase
  */
 app.post('/api/customers/new', async (req, res) => {
-  if (!req.query.uid) {
+  if (!req.query.uid || !req.query.pushToken) {
       res.status(400).send('Malformed Request');
       return;
   }
@@ -455,6 +456,7 @@ app.post('/api/customers/new', async (req, res) => {
     currentQueue: '',
     recents: [],
     favorites: [],
+    pushToken: req.query.pushToken === 'NO_ID' ? '' : req.query.pushToken as string,
   };
 
   try {
@@ -656,7 +658,7 @@ app.get('/api/businesses/locations', async (req, res) => {
   }
 
   res.status(200).json(result);
-})
+});
 
 exports.widgets = functions.https.onRequest(app);
 
