@@ -1,32 +1,54 @@
-/**
- * Parser for displaying phone numbers
- * @param {string} phoneNum
- * @return {string} parsed phone number
- */
-export function parsePhoneNum(phoneNum : string) : string {
-  let number = phoneNum;
-  if (phoneNum.length < 3) {
-    return phoneNum;
-  } else {
-    number = '(' + phoneNum.substring(0, 3) + ')' + number.substring(3);
-  }
+import { Party } from "./queue";
+import { BusinessLocation } from "./business";
+import * as admin from 'firebase-admin';
 
-  if (number.length > 8) {
-    number = number.substring(0, 8) + '-' + number.substring(8);
-  }
-  return number;
+
+
+export function partyToFirebase(party: Party): any {
+  return {
+    firstName: party.firstName,
+    size: party.size,
+    phoneNumber: party.phoneNumber,
+    quote: party.quote,
+    checkIn: party.checkIn,
+    lastName: party.lastName,
+    messages: messageToFB(party.messages),
+    pushToken: party.pushToken,
+  };
 }
 
-/**
- * Parses Name for customer side display
- * @param {string} firstName first name of customer
- * @param {string} lastName last name of customer
- * @return {string} display name
- */
-export function parseShortName(firstName: string, lastName: String) : string {
-  if (lastName.length < 1) {
-    return firstName.substring(0, 1).toUpperCase();
+export function messageToFB(messages: [string, string][]) : any[] {
+  const ret : any[] = [];
+  if (messages) {
+    for (const message of messages) {
+      const entry = {
+        date: message[0],
+        message: message[1],
+      };
+      ret.push(entry);
+    }
   }
-  return firstName.substring(0, 1).toUpperCase() + ' ' +
-      lastName.substring(0, 1).toUpperCase();
+  return ret;
+}
+
+export function businessLocationToFirebase(location: any) {
+  return {
+    name: location.name,
+    address: location.address,
+    phoneNumber: location.phoneNumber,
+    hours: BusinessLocation.hoursToFirebase(location.hours), // need fixing
+    coordinates: new admin.firestore.GeoPoint(
+        location.coordinates[0],
+        location.coordinates[1],
+    ),
+    queues: location.queues,
+    geoFenceRadius: location.geoFenceRadius,
+    images: location.images,
+  };
+}
+
+export function diff_minutes(dt2: Date, dt1: Date) {
+  let diff =(dt2.getTime() - dt1.getTime()) / 1000;
+  diff /= 60;
+  return Math.abs(Math.round(diff));
 }
