@@ -137,6 +137,7 @@ export const getBusinessLocation =  async (req : Request, res : Response) => {
       if (doc.exists) {
         const data = doc.data();
         ret =  BusinessLocation.fromFirebase(data.type, data.locations[0]);
+        ret.uid = uid;
       } else {
         res.sendStatus(404);
       }
