@@ -144,7 +144,7 @@ export const getBusinessLocation =  async (req : Request, res : Response) => {
     }).catch(() => {
       res.sendStatus(500);
     });
-
+    // test
   if (!ret) {
     return;
   }
